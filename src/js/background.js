@@ -53,8 +53,6 @@ async function createMenuList() {
   addRefreshMenuItem();
 }
 
-createMenuList();
-
 function changeMenu(message) {
   switch (message.action) {
     case 'createMenuItem':
@@ -98,9 +96,9 @@ async function setActionTitle(windowId, activeGroup = null) {
   browser.browserAction.setBadgeBackgroundColor({ color: '#666666' });
 }
 
-async function toggleVisibleTabs(activeGroup, noTabSelected) {
+async function toggleVisibleTabs(activeGroup, noTabSelected, windowId) {
   // Show and hide the appropriate tabs
-  const tabs = await browser.tabs.query({ currentWindow: true });
+  const tabs = await browser.tabs.query(windowId ? { windowId } : { currentWindow: true });
 
   const showTabIds = [];
   const hideTabIds = [];
@@ -253,6 +251,28 @@ async function toggleView() {
   }
 }
 
+/** Re-apply shown/hidden tabs from the window's state.
+ * Restoring a session (e.g. History > Restore Previous Session) brings tabs back with
+ * their old hidden flags and often selects a pinned tab, which tabActivated ignores,
+ * leaving every grouped tab hidden. */
+async function syncWindow(windowId) {
+  const [tab] = await browser.tabs.query({ active: true, windowId });
+  let group = tab.pinned ? undefined : await browser.sessions.getTabValue(tab.id, 'groupId');
+  if (group === undefined) {
+    group = await browser.sessions.getWindowValue(windowId, 'activeGroup');
+  }
+  await toggleVisibleTabs(group, false, windowId);
+  // restored window brings its own groups; menu was built from the pre-restore ones
+  await createMenuList();
+}
+
+const syncTimers = {};
+/** Restored tabs arrive in a burst; sync once after it settles */
+function scheduleSync(windowId) {
+  clearTimeout(syncTimers[windowId]);
+  syncTimers[windowId] = setTimeout(() => syncWindow(windowId).catch(console.error), 500);
+}
+
 /** Callback function which will be called whenever a tab is opened */
 async function tabCreated(tab) {
   if (window.backgroundState.openingBackup) {
@@ -267,6 +287,9 @@ async function tabCreated(tab) {
       const activeGroup = await browser.sessions.getWindowValue(tab.windowId, 'activeGroup');
 
       await browser.sessions.setTabValue(tab.id, 'groupId', activeGroup);
+    } else {
+      // tab already has a group: it's being restored (session restore, undo close)
+      scheduleSync(tab.windowId);
     }
   } else {
     // Opening the Panorama View tab
@@ -443,6 +466,7 @@ async function init() {
 
   await setupWindows();
   await salvageGrouplessTabs();
+  await createMenuList();
 
   console.log('Finished setup');
 
