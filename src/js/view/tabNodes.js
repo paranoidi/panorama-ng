@@ -214,8 +214,9 @@ export async function initTabNodes(tabId) {
   await forEachTab(async (tab) => {
     makeTabNode(tab);
     updateTabNode(tab);
-    await updateFavicon(tab);
-    await updateThumbnail(tab.id);
+    // images only restyle existing nodes; don't block view render on them
+    updateFavicon(tab);
+    updateThumbnail(tab.id);
   });
   setActiveTabNode(tabId);
 }
