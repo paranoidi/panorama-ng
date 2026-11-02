@@ -7,8 +7,6 @@ window.backgroundState = {
   openingBackup: false,
 };
 
-window.viewRefreshOrdered = false;
-
 /** Modulo in javascript does not behave like modulo in mathematics when x is negative.
  * Following code is based from this:
  * https://stackoverflow.com/questions/4467539/javascript-modulo-gives-a-negative-result-for-negative-numbers */
@@ -405,8 +403,6 @@ async function salvageGrouplessTabs() {
 }
 
 async function init() {
-  const options = await loadOptions();
-
   console.log('Initializing Panorama Tab View');
 
   await setupWindows();
@@ -414,16 +410,7 @@ async function init() {
 
   console.log('Finished setup');
 
-  const disablePopupView = options.view !== 'popup';
-  if (disablePopupView) {
-    // Disable popup
-    browser.browserAction.setPopup({
-      popup: '',
-    });
-
-    browser.browserAction.onClicked.addListener(toggleView);
-  }
-
+  browser.browserAction.onClicked.addListener(toggleView);
   browser.commands.onCommand.addListener(triggerCommand);
   browser.windows.onCreated.addListener(createGroupInWindowIfMissing);
   browser.tabs.onCreated.addListener(tabCreated);
@@ -433,43 +420,6 @@ async function init() {
 }
 
 init();
-
-window.refreshView = async function refreshView() {
-  const options = await loadOptions();
-
-  console.log('Refresh Panorama Tab View');
-  window.viewRefreshOrdered = true;
-
-  browser.browserAction.onClicked.removeListener(toggleView);
-  browser.commands.onCommand.removeListener(triggerCommand);
-  browser.windows.onCreated.removeListener(createGroupInWindowIfMissing);
-  browser.tabs.onCreated.removeListener(tabCreated);
-  browser.tabs.onAttached.removeListener(tabAttached);
-  browser.tabs.onDetached.removeListener(tabDetached);
-  browser.tabs.onActivated.removeListener(tabActivated);
-
-  const disablePopupView = options.view !== 'popup';
-  if (disablePopupView) {
-    // Disable popup
-    browser.browserAction.setPopup({
-      popup: '',
-    });
-
-    browser.browserAction.onClicked.addListener(toggleView);
-  } else {
-    // Re-enable popup
-    browser.browserAction.setPopup({
-      popup: 'popup-view/index.html',
-    });
-  }
-
-  browser.commands.onCommand.addListener(triggerCommand);
-  browser.windows.onCreated.addListener(createGroupInWindowIfMissing);
-  browser.tabs.onCreated.addListener(tabCreated);
-  browser.tabs.onAttached.addListener(tabAttached);
-  browser.tabs.onDetached.addListener(tabDetached);
-  browser.tabs.onActivated.addListener(tabActivated);
-};
 
 // TODO: Remove? Is this used?
 function handleMessage(message, sender) { // eslint-disable-line no-unused-vars

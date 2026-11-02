@@ -8,7 +8,6 @@ import {
   disableShortcutForm,
   enableShortcut,
 } from './shortcuts.js';
-import { saveOptionView, showViewSpecificOptions } from './view.js';
 import saveOptionTheme from './theme.js';
 import saveOptionToolbarPosition from './toolbar.js';
 import { loadBackup, saveBackup } from './backup.js';
@@ -25,12 +24,6 @@ function restoreOptions(options, loadedShortcuts) {
       disableShortcutForm(shortcut.name);
     }
   });
-
-  // View
-  document.querySelector(
-    `input[name="view"][value="${options.view}"]`,
-  ).checked = true;
-  showViewSpecificOptions(options.view);
 
   // Theme
   document.querySelector(
@@ -72,11 +65,6 @@ function attachEventHandler(options, loadedShortcuts) {
         .addEventListener('click', disableShortcut.bind(this, options));
     }
   });
-
-  // View
-  document
-    .querySelector('form[name="formView"]')
-    .addEventListener('change', saveOptionView);
 
   // Theme
   document

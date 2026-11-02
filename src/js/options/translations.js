@@ -61,12 +61,6 @@ export default function addTranslations() {
     '#optionsView h2',
   ).textContent = browser.i18n.getMessage('optionsView');
   document.querySelector(
-    'label[for="viewFreeform"] span',
-  ).textContent = browser.i18n.getMessage('optionsViewFreeform');
-  document.querySelector(
-    'label[for="viewPopup"] span',
-  ).textContent = browser.i18n.getMessage('optionsViewPopup');
-  document.querySelector(
     '#optionsTheme h2',
   ).textContent = browser.i18n.getMessage('optionsTheme');
   document.querySelector(

@@ -56,8 +56,7 @@
         "light": "icons/icon_light.svg",
         "dark": "icons/icon.svg",
         "size": 32
-        }],
-        "default_popup": "popup-view/index.html"
+        }]
     },
 
     "options_ui": {

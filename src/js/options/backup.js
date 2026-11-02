@@ -1,5 +1,3 @@
-import { currentOptions } from '../_share/options.js';
-
 function convertBackup(tgData) {
   const data = {
     file: {
@@ -157,24 +155,13 @@ async function openBackup(data) {
       }
     });
 
-    if ((await currentOptions).view === 'freeform') {
-      // Show freeform view
-      const freeformViewTab = await browser.tabs.create({
-        url: '/view.html',
-        active: true,
-        windowId: window.id,
-      });
-      await browser.sessions.setTabValue(freeformViewTab.id, 'groupId', -1);
-    } else {
-      // Remove the "New tab"-tab
-      const activeNewTabs = await browser.tabs.query({
-        windowId: window.id,
-        active: true,
-      });
-      if (activeNewTabs.length === 1) {
-        await browser.tabs.remove(activeNewTabs[0].id);
-      }
-    }
+    // Show freeform view
+    const freeformViewTab = await browser.tabs.create({
+      url: '/view.html',
+      active: true,
+      windowId: window.id,
+    });
+    await browser.sessions.setTabValue(freeformViewTab.id, 'groupId', -1);
   });
   background.backgroundState.openingBackup = false;
 }

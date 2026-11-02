@@ -7,7 +7,7 @@ const compat = new FlatCompat({ baseDirectory: import.meta.dirname, recommendedC
 
 export default [
   {
-    ignores: ['eslint.config.mjs', 'build', 'dist', 'web-ext-artifacts', 'src/js/depends/dragscroll.js', 'src/popup-view/*', 'src/_shared/js/models/View.js'],
+    ignores: ['eslint.config.mjs', 'build', 'dist', 'web-ext-artifacts', 'src/js/depends/dragscroll.js'],
   },
   ...compat.extends('airbnb-base'),
   {
@@ -23,8 +23,6 @@ export default [
       'no-param-reassign': 0,
       'no-console': 0,
       'no-alert': 0,
-      // ponytail: Tab/Group constructors return Promises on purpose (`await new Tab()`); refactor to static create() to re-enable
-      'no-constructor-return': 0,
     },
   },
   { files: ['**/*.json'], ...json.configs.recommended },

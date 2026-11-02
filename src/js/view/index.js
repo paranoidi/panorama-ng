@@ -348,10 +348,7 @@ async function initView() {
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
-      const background = browser.extension.getBackgroundPage();
-
-      if (pendingReload || background.viewRefreshOrdered) {
-        background.viewRefreshOrdered = false;
+      if (pendingReload) {
         window.location.reload();
       }
 
