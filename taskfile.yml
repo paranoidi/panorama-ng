@@ -17,7 +17,7 @@ tasks:
 
   run:
     desc: Run extension in a throwaway Firefox profile with auto-reload
-    deps: [setup]
+    deps: [build, setup]
     cmds:
       - '{{.NODE}} npx web-ext run -s src'
 
