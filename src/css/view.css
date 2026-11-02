@@ -164,7 +164,8 @@ body {
 	position: fixed;
 	right: 16px;
 	bottom: 16px;
-	z-index: 1000;
+	/* groups use timestamp z-indexes up to 999999999 */
+	z-index: 2147483647;
 	width: 180px;
 	height: 120px;
 	align-items: center;
