@@ -346,7 +346,9 @@ async function initView() {
   autoArrangeButton.title = browser.i18n.getMessage('autoArrangeButton');
   autoArrangeButton.classList.toggle('on', (await loadOptions()).autoArrange);
   autoArrangeButton.addEventListener('click', () => {
-    browser.storage.sync.set({ autoArrange: autoArrangeButton.classList.toggle('on') });
+    const on = autoArrangeButton.classList.toggle('on');
+    browser.storage.sync.set({ autoArrange: on });
+    if (on) activateTiling();
   }, false);
 
   // Domain -> group rules editor
