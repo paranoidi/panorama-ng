@@ -9,7 +9,7 @@ Compared to the last upstream Panorama Tab Groups release:
 - **Domain rules** – the ⇢ toolbar button opens a rule editor that maps domains to groups. Tabs opening a matching domain move to that group automatically, and the group is created if missing. Patterns support wildcards anywhere (`*.reddit.com`, `192.168.*`, `*.example.*`); `*.example.com` also matches `example.com`. Saving rules re-sorts already open tabs.
 - **Multi-tab selection** – Ctrl/Cmd+click selects several tabs; dragging one of them moves them all.
 - **"Create new group" drop target** – while dragging tabs, a drop zone appears in the bottom-right corner, so a new group can be made even when tiling leaves no free space.
-- **Auto-arrange toggle** – the lightbulb toolbar button arranges groups automatically when a new group is created (blue = on). Choosing free-form layout turns it off. Groups created by domain rules while the view is closed are arranged when the view opens.
+- **Tiling lock** – the grid toolbar button turns on automatic tiling (blue = on): groups are arranged automatically, new groups included, and locked in place. Free-form layout unlocks them.
 - **Escape cancels a group rename.**
 
 ## Other improvements

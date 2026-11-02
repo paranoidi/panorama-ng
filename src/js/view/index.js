@@ -37,6 +37,8 @@ function queueReload() {
 // Toggle tiling on or off
 async function setLayoutMode(mode) {
   const windowId = (await browser.windows.getCurrent()).id;
+  // body.tiling colours the tiling button and drops move/resize cursors
+  document.body.classList.toggle('tiling', mode === 'tiling');
 
   if (mode === 'tiling') {
     await browser.sessions.setWindowValue(windowId, 'layoutMode', 'tiling');
@@ -104,7 +106,7 @@ async function createGroup(x = 75, y = 75) {
 
   view.groupsNode.appendChild(groupElement);
 
-  if ((await loadOptions()).autoArrange) {
+  if (document.body.classList.contains('tiling')) {
     activateTiling();
   } else {
     resizeGroups();
@@ -307,11 +309,8 @@ async function initView() {
 
   // restore the window's saved layout (free-form if never chosen)
   const layoutMode = await browser.sessions.getWindowValue(view.windowId, 'layoutMode');
-  // a domain rule created a group while the view was closed: auto-arrange like createGroup does
-  const arrangePending = await browser.sessions.getWindowValue(view.windowId, 'arrangePending');
-  if (arrangePending) await browser.sessions.removeWindowValue(view.windowId, 'arrangePending');
-
-  if (layoutMode === 'tiling' || (arrangePending && (await loadOptions()).autoArrange)) {
+  if (layoutMode === 'tiling') {
+    document.body.classList.add('tiling');
     activateTiling();
   } else {
     resizeGroups();
@@ -332,23 +331,11 @@ async function initView() {
 
   document.getElementById('freeform').addEventListener('click', () => {
     setLayoutMode('freeform');
-    document.getElementById('autoArrange').classList.remove('on');
-    browser.storage.sync.set({ autoArrange: false });
   }, false);
 
   // Listen for tiling toggle
   document.getElementById('tiling').addEventListener('click', () => {
     setLayoutMode('tiling');
-  }, false);
-
-  // Auto-arrange toggle; state is shown by the .on class (colour)
-  const autoArrangeButton = document.getElementById('autoArrange');
-  autoArrangeButton.title = browser.i18n.getMessage('autoArrangeButton');
-  autoArrangeButton.classList.toggle('on', (await loadOptions()).autoArrange);
-  autoArrangeButton.addEventListener('click', () => {
-    const on = autoArrangeButton.classList.toggle('on');
-    browser.storage.sync.set({ autoArrange: on });
-    if (on) activateTiling();
   }, false);
 
   // Domain -> group rules editor

@@ -205,3 +205,13 @@
 
 	cursor: nwse-resize;
 }
+
+/* tiling locks groups in place: no move / resize cursors */
+body.tiling .group .header,
+body.tiling .group .content {
+	cursor: default;
+}
+
+body.tiling .group :is(.top, .right, .bottom, .left, .topRight, .bottomRight, .bottomLeft, .topLeft) {
+	display: none;
+}

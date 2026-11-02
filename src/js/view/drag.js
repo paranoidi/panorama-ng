@@ -1,4 +1,3 @@
-import { loadOptions } from '../_share/options.js';
 import { setGroupId, getGroupId } from './tabs.js';
 import {
   groupNodes, makeGroupNode, resizeGroups, updateGroupFit, insertTab, activateTiling,
@@ -191,7 +190,7 @@ export async function outsideDrop(e) {
 
   document.getElementById('groups').appendChild(groupElement);
 
-  if ((await loadOptions()).autoArrange) {
+  if (document.body.classList.contains('tiling')) {
     activateTiling();
   } else {
     resizeGroups();

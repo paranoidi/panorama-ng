@@ -352,7 +352,6 @@ async function applyDomainRules(tabId, changeInfo, tab) {
     };
     groups.push(group);
     await browser.sessions.setWindowValue(tab.windowId, 'groups', groups);
-    await browser.sessions.setWindowValue(tab.windowId, 'arrangePending', true);
     changeMenu({ action: 'createMenuItem', groupId: id.toString(), groupName });
     // open view holds its own copy of the groups list; make it reload instead of overwriting ours
     browser.runtime.sendMessage({ action: 'groupsChanged' }).catch(() => {});

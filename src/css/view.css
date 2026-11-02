@@ -58,22 +58,22 @@ body {
 }
 
 /* masked so one SVG takes the theme / "on" colour via currentColor */
-#autoArrange {
+#tiling {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: rgba(12, 12, 13, 0.8);
 }
 
-#autoArrange::before {
+#tiling::before {
 	content: '';
 	width: 16px;
 	height: 16px;
 	background-color: currentColor;
-	mask: url(/icons/lightbulb.svg) no-repeat center;
+	mask: url(/icons/grid.svg) no-repeat center;
 }
 
-#autoArrange.on {
+body.tiling #tiling {
 	color: #0a84ff;
 }
 
@@ -91,10 +91,6 @@ body {
 
 #freeform {
     background-image: url(/icons/icon.svg);
-}
-
-#tiling {
-    background-image: url(/icons/grid.svg);
 }
 
 #pinnedTabs {
