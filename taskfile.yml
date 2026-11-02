@@ -1,0 +1,37 @@
+version: '3'
+
+vars:
+  # ponytail: no .nvmrc in repo, uses nvm's default Node; add .nvmrc to pin one
+  NODE: 'bash -c ''export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh" >/dev/null; nvm use default >/dev/null; exec "$@"'' --'
+
+tasks:
+  install:
+    desc: Install dev dependencies
+    cmds:
+      - '{{.NODE}} npm ci'
+    sources: [package.json, package-lock.json]
+    generates: [node_modules/.package-lock.json]
+
+  run:
+    desc: Run extension in a throwaway Firefox profile with auto-reload
+    deps: [install]
+    cmds:
+      - '{{.NODE}} npx web-ext run -s src'
+
+  run:profile:
+    desc: Run extension in your real Firefox profile (shares real tab group data!)
+    deps: [install]
+    cmds:
+      - '{{.NODE}} npx web-ext run -s src --firefox-profile=default-release --keep-profile-changes'
+
+  lint:
+    desc: Run eslint and web-ext lint
+    deps: [install]
+    cmds:
+      - '{{.NODE}} npm run lint'
+
+  build:
+    desc: Package extension zip into web-ext-artifacts/
+    deps: [install]
+    cmds:
+      - '{{.NODE}} npx web-ext build -s src --overwrite-dest'
