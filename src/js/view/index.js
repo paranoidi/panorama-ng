@@ -286,11 +286,6 @@ async function singleClick(e) {
  * to respond to user actions and react to changes
  */
 async function initView() {
-  // set tiling off initially
-  // const windowId = (await browser.windows.getCurrent()).id;
-  // const tilingStatus = await browser.sessions.setWindowValue(windowId, 'tilingStatus', 'true');
-  setLayoutMode('freeform');
-
   // set locale specific titles
   document.getElementById('newGroup').title = browser.i18n.getMessage('newGroupButton');
   document.getElementById('settings').title = browser.i18n.getMessage('settingsButton');
@@ -310,7 +305,17 @@ async function initView() {
   await initTabNodes(view.tabId);
   await initGroupNodes(view.groupsNode);
 
-  resizeGroups();
+  // restore the window's saved layout (free-form if never chosen)
+  const layoutMode = await browser.sessions.getWindowValue(view.windowId, 'layoutMode');
+  // a domain rule created a group while the view was closed: auto-arrange like createGroup does
+  const arrangePending = await browser.sessions.getWindowValue(view.windowId, 'arrangePending');
+  if (arrangePending) await browser.sessions.removeWindowValue(view.windowId, 'arrangePending');
+
+  if (layoutMode === 'tiling' || (arrangePending && (await loadOptions()).autoArrange)) {
+    activateTiling();
+  } else {
+    resizeGroups();
+  }
 
   captureThumbnails();
   // view.intervalId = setInterval(captureThumbnails, 2000);
