@@ -153,7 +153,7 @@
         "message": "Domain rules"
     },
     "domainRulesHelp": {
-        "message": "\"*.example.com\" also matches example.com. The first matching rule wins; its group is created if missing."
+        "message": "\"*\" matches anything (e.g. \"192.168.*\"); \"*.example.com\" also matches example.com. The first matching rule wins; its group is created if missing."
     },
     "domainRulesDomain": {
         "message": "Domain"

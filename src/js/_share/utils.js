@@ -90,9 +90,14 @@ export function matchDomainRule(rules, hostname) {
   const rule = rules.find(({ pattern, group }) => {
     if (!pattern || !group) return false;
     const p = pattern.trim().toLowerCase();
-    if (p.startsWith('*.')) {
+    if (p.startsWith('*.') && !p.slice(2).includes('*')) {
       const base = p.slice(2);
       return hostname === base || hostname.endsWith(`.${base}`);
+    }
+    if (p.includes('*')) {
+      // other wildcards: '*' matches anything, e.g. 192.168.* or *.example.*
+      const re = p.split('*').map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+      return new RegExp(`^${re}$`).test(hostname);
     }
     return hostname === p;
   });
