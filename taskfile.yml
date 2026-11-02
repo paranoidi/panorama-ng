@@ -5,7 +5,7 @@ vars:
   NODE: 'bash -c ''export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh" >/dev/null; nvm use default >/dev/null; exec "$@"'' --'
 
 tasks:
-  install:
+  setup:
     desc: Install dev dependencies
     cmds:
       - '{{.NODE}} npm ci'
@@ -14,24 +14,42 @@ tasks:
 
   run:
     desc: Run extension in a throwaway Firefox profile with auto-reload
-    deps: [install]
+    deps: [setup]
     cmds:
       - '{{.NODE}} npx web-ext run -s src'
 
   run:profile:
     desc: Run extension in your real Firefox profile (shares real tab group data!)
-    deps: [install]
+    deps: [setup]
     cmds:
       - '{{.NODE}} npx web-ext run -s src --firefox-profile=default-release --keep-profile-changes'
 
   lint:
     desc: Run eslint and web-ext lint
-    deps: [install]
+    deps: [setup]
     cmds:
       - '{{.NODE}} npm run lint'
 
   build:
     desc: Package extension zip into web-ext-artifacts/
-    deps: [install]
+    deps: [setup]
     cmds:
       - '{{.NODE}} npx web-ext build -s src --overwrite-dest'
+
+  install:deved:
+    desc: Install build into Firefox Developer Edition profile (restart Firefox to load)
+    deps: [build]
+    vars:
+      PROFILE:
+        sh: ls -d ~/.mozilla/firefox/*.dev-edition-default
+      ID: panorama-tab-groups@example.com
+    cmds:
+      - mkdir -p "{{.PROFILE}}/extensions"
+      - cp "$(ls -t web-ext-artifacts/*.zip | head -1)" "{{.PROFILE}}/extensions/{{.ID}}.xpi"
+      # ponytail: user.js is re-applied on every start; allows unsigned + profile-dir (sideloaded) add-ons
+      - |
+        grep -q xpinstall.signatures.required "{{.PROFILE}}/user.js" 2>/dev/null || cat >> "{{.PROFILE}}/user.js" <<'JS'
+        user_pref("xpinstall.signatures.required", false);
+        user_pref("extensions.autoDisableScopes", 14);
+        JS
+      - echo "Installed to {{.PROFILE}} - restart Firefox Developer Edition"
