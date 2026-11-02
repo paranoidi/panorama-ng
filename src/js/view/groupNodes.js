@@ -1,4 +1,4 @@
-import { getGroupId, forEachTab } from './tabs.js';
+import { getGroupId, forEachTab, getAllTabsInWindow } from './tabs.js';
 import { groupDragOver, groupDrop } from './drag.js';
 import * as groups from './groups.js';
 import { newElement, getPluralForm } from '../_share/utils.js';
@@ -530,6 +530,7 @@ export function makeGroupNode(group) {
 export async function fillGroupNodes() {
   if (modifyingGroupContent) {
     setTimeout(() => fillGroupNodes(), 100);
+    return;
   }
   try {
     modifyingGroupContent = true;
@@ -542,14 +543,13 @@ export async function fillGroupNodes() {
       fragment[group.id] = document.createDocumentFragment();
     });
 
-    await forEachTab(async (tab) => {
-      if (!tab.pinned) {
-        const groupId = await getGroupId(tab.id);
-        if (groupId !== -1 && fragment[groupId]) {
-          fragment[groupId].appendChild(getTabNode(tab.id));
-        }
-      } else {
+    const tabs = await getAllTabsInWindow();
+    const groupIds = await Promise.all(tabs.map((tab) => getGroupId(tab.id)));
+    tabs.forEach((tab, i) => {
+      if (tab.pinned) {
         fragment.pinned.appendChild(getTabNode(tab.id));
+      } else if (groupIds[i] !== -1 && fragment[groupIds[i]]) {
+        fragment[groupIds[i]].appendChild(getTabNode(tab.id));
       }
     });
 
@@ -580,6 +580,7 @@ export async function initGroupNodes(groupsNode) {
 export async function insertTab(oldTab) {
   if (modifyingGroupContent) {
     setTimeout(() => insertTab(oldTab), 100);
+    return;
   }
   try {
     modifyingGroupContent = true;
@@ -635,6 +636,8 @@ export async function insertTab(oldTab) {
         // Rebuilding everything just to be safe
         setTimeout(() => fillGroupNodes(), 100);
       }
+      // size the inserted tab now; an unsized tab collapses into the top-left corner
+      updateGroupFit(groups.get(groupId));
     }
   } finally {
     modifyingGroupContent = false;
