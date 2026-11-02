@@ -34,9 +34,6 @@ function restoreOptions(options, loadedShortcuts) {
   document.querySelector(
     `input[name="toolbarPosition"][value="${options.toolbarPosition}"]`,
   ).checked = true;
-
-  // Auto-arrange
-  document.getElementById('autoArrange').checked = options.autoArrange;
 }
 
 function attachEventHandler(options, loadedShortcuts) {
@@ -75,11 +72,6 @@ function attachEventHandler(options, loadedShortcuts) {
   document
     .querySelector('form[name="formToolbarPosition"]')
     .addEventListener('change', saveOptionToolbarPosition);
-
-  // Auto-arrange
-  document
-    .getElementById('autoArrange')
-    .addEventListener('change', (e) => browser.storage.sync.set({ autoArrange: e.target.checked }));
 
   // Backup
   document

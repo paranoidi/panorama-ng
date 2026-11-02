@@ -332,11 +332,21 @@ async function initView() {
 
   document.getElementById('freeform').addEventListener('click', () => {
     setLayoutMode('freeform');
+    document.getElementById('autoArrange').classList.remove('on');
+    browser.storage.sync.set({ autoArrange: false });
   }, false);
 
   // Listen for tiling toggle
   document.getElementById('tiling').addEventListener('click', () => {
     setLayoutMode('tiling');
+  }, false);
+
+  // Auto-arrange toggle; state is shown by the .on class (colour)
+  const autoArrangeButton = document.getElementById('autoArrange');
+  autoArrangeButton.title = browser.i18n.getMessage('autoArrangeButton');
+  autoArrangeButton.classList.toggle('on', (await loadOptions()).autoArrange);
+  autoArrangeButton.addEventListener('click', () => {
+    browser.storage.sync.set({ autoArrange: autoArrangeButton.classList.toggle('on') });
   }, false);
 
   // Domain -> group rules editor

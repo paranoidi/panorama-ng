@@ -32,8 +32,13 @@ body.theme-dark {
 	background-image: url(/icons/grid_light.svg);
 }
 
+.theme-dark #autoArrange,
 .theme-dark #domainRulesButton {
 	color: rgba(249, 249, 250, 0.8);
+}
+
+.theme-dark #autoArrange.on {
+	color: #45a1ff;
 }
 
 .theme-dark #pinnedTabs {

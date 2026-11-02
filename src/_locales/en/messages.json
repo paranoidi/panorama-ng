@@ -149,6 +149,9 @@
     "sendTab": {
         "message": "Send To Group"
     },
+    "autoArrangeButton": {
+        "message": "Auto-arrange groups when a new group is created"
+    },
     "domainRulesButton": {
         "message": "Domain rules"
     },

@@ -57,6 +57,26 @@ body {
 	cursor: pointer;
 }
 
+/* masked so one SVG takes the theme / "on" colour via currentColor */
+#autoArrange {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: rgba(12, 12, 13, 0.8);
+}
+
+#autoArrange::before {
+	content: '';
+	width: 16px;
+	height: 16px;
+	background-color: currentColor;
+	mask: url(/icons/lightbulb.svg) no-repeat center;
+}
+
+#autoArrange.on {
+	color: #0a84ff;
+}
+
 #domainRulesTable th {
 	text-align: left;
 }
