@@ -359,6 +359,8 @@ async function initView() {
   document.getElementById('domainRulesHelp').textContent = i18n('domainRulesHelp');
   rulesDialog.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = i18n(el.dataset.i18n); });
 
+  const byGroup = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' });
+
   // Row with pattern/group inputs and a Delete (or, for the trailing row, Add) button
   const ruleRow = ({ pattern = '', group = '' } = {}, isNew = false) => {
     const button = newElement('button', {
@@ -381,7 +383,10 @@ async function initView() {
       }
       const [p, g] = row.querySelectorAll('input');
       if (!p.value.trim() || !g.value.trim()) return;
-      row.before(ruleRow({ pattern: p.value, group: g.value }));
+      // insert after the last rule with the same or an earlier group name
+      const next = [...rulesBody.querySelectorAll('.rule-group')]
+        .find((input) => input !== g && byGroup(input.value, g.value) > 0);
+      (next ? next.closest('tr') : row).before(ruleRow({ pattern: p.value, group: g.value }));
       p.value = '';
       g.value = '';
       p.focus();
@@ -391,7 +396,10 @@ async function initView() {
 
   document.getElementById('domainRulesButton').addEventListener('click', async () => {
     const { domainRules } = await loadOptions();
-    rulesBody.replaceChildren(...domainRules.map((rule) => ruleRow(rule)), ruleRow({}, true));
+    // ponytail: saving persists this order, so first-match priority follows group name
+    const sorted = [...domainRules]
+      .sort((a, b) => byGroup(a.group, b.group));
+    rulesBody.replaceChildren(...sorted.map((rule) => ruleRow(rule)), ruleRow({}, true));
     const groupNames = [];
     groups.forEach((group) => groupNames.push(newElement('option', { value: group.name })));
     document.getElementById('domainRulesGroupNames').replaceChildren(...groupNames);
