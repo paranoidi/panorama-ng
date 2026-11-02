@@ -18,7 +18,7 @@ import resetPTG from './reset.js';
 function restoreOptions(options, loadedShortcuts) {
   // Shortcuts
   loadedShortcuts.forEach((shortcut) => {
-    if (Object.prototype.hasOwnProperty.call(shortcut, 'name')) {
+    if (!Object.prototype.hasOwnProperty.call(options.shortcut, shortcut.name)) {
       return;
     }
     if (options.shortcut[shortcut.name].disabled) {
@@ -41,6 +41,9 @@ function restoreOptions(options, loadedShortcuts) {
   document.querySelector(
     `input[name="toolbarPosition"][value="${options.toolbarPosition}"]`,
   ).checked = true;
+
+  // Auto-arrange
+  document.getElementById('autoArrange').checked = options.autoArrange;
 }
 
 function attachEventHandler(options, loadedShortcuts) {
@@ -63,7 +66,7 @@ function attachEventHandler(options, loadedShortcuts) {
       .querySelector('.enableShortcut')
       .addEventListener('click', enableShortcut.bind(this, options));
 
-    if (Object.prototype.hasOwnProperty.call(shortcut, 'name')) {
+    if (Object.prototype.hasOwnProperty.call(options.shortcut, shortcut.name)) {
       shortcutNode
         .querySelector('.disableShortcut')
         .addEventListener('click', disableShortcut.bind(this, options));
@@ -84,6 +87,11 @@ function attachEventHandler(options, loadedShortcuts) {
   document
     .querySelector('form[name="formToolbarPosition"]')
     .addEventListener('change', saveOptionToolbarPosition);
+
+  // Auto-arrange
+  document
+    .getElementById('autoArrange')
+    .addEventListener('change', (e) => browser.storage.sync.set({ autoArrange: e.target.checked }));
 
   // Backup
   document

@@ -1,6 +1,7 @@
+import { loadOptions } from '../_share/options.js';
 import { setGroupId, getGroupId } from './tabs.js';
 import {
-  groupNodes, makeGroupNode, resizeGroups, updateGroupFit, insertTab,
+  groupNodes, makeGroupNode, resizeGroups, updateGroupFit, insertTab, activateTiling,
 } from './groupNodes.js';
 import * as groups from './groups.js';
 import { newElement } from '../_share/utils.js';
@@ -175,7 +176,11 @@ export async function outsideDrop(e) {
 
   e.target.appendChild(groupElement);
 
-  resizeGroups();
+  if ((await loadOptions()).autoArrange) {
+    activateTiling();
+  } else {
+    resizeGroups();
+  }
 
   putTabInGroup(group.id);
 

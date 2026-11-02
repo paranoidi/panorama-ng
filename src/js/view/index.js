@@ -4,13 +4,14 @@ import {
 } from './drag.js';
 import {
   groupNodes, initGroupNodes, closeGroup, makeGroupNode,
-  fillGroupNodes, insertTab, resizeGroups, raiseGroup, updateGroupFit,
+  fillGroupNodes, insertTab, resizeGroups, raiseGroup, updateGroupFit, activateTiling,
 } from './groupNodes.js';
 import {
   initTabNodes, makeTabNode, updateTabNode, setActiveTabNode,
   setActiveTabNodeById, getActiveTabId, deleteTabNode, updateThumbnail, updateFavicon,
 } from './tabNodes.js';
 import * as groups from './groups.js';
+import { loadOptions } from '../_share/options.js';
 
 const view = {
   windowId: -1,
@@ -28,42 +29,6 @@ function queueReload() {
     pendingReload = true;
   } else {
     window.location.reload();
-  }
-}
-
-async function activateTiling() {
-  const windowId = (await browser.windows.getCurrent()).id;
-  await browser.sessions.getWindowValue(windowId, 'layoutMode');
-
-  const numGroups = groups.getLength();
-
-  // get number of groups per row
-  const maxGroups = Math.ceil(Math.sqrt(numGroups));
-  const quotient = Math.floor(numGroups / maxGroups);
-  const remainder = numGroups % maxGroups;
-
-  const gridLayout = Array(quotient).fill(maxGroups);
-  if (remainder !== 0) {
-    gridLayout.push(remainder);
-  }
-
-  const groupIds = groups.getIds();
-  let currentIndex = 0;
-  // gridLayout[i] = number of cells per row
-  for (let i = 0; i < gridLayout.length; i += 1) {
-    // j = specific cell in each row
-    for (let j = 0; j < gridLayout[i]; j += 1) {
-      const rect = {};
-      rect.x = j / gridLayout[i];
-      rect.y = i / gridLayout.length;
-      rect.w = 1.0 / gridLayout[i];
-      rect.h = 1.0 / gridLayout.length;
-      rect.i = rect.x + rect.w;
-      rect.j = rect.y + rect.h;
-      groups.transform(groupIds[currentIndex], rect);
-      resizeGroups(groupIds[currentIndex], rect);
-      currentIndex += 1;
-    }
   }
 }
 
@@ -138,7 +103,11 @@ async function createGroup(x = 75, y = 75) {
 
   view.groupsNode.appendChild(groupElement);
 
-  resizeGroups();
+  if ((await loadOptions()).autoArrange) {
+    activateTiling();
+  } else {
+    resizeGroups();
+  }
 
   groupElement.scrollIntoView({ behavior: 'smooth' });
 }
