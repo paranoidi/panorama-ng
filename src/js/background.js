@@ -411,10 +411,7 @@ async function createGroupInWindowIfMissing(browserWindow) {
 /** Make sure each window has a group */
 async function setupWindows() {
   const windows = await browser.windows.getAll({});
-
-  windows.forEach(async (window) => {
-    await createGroupInWindowIfMissing(window);
-  });
+  await Promise.all(windows.map(createGroupInWindowIfMissing));
 }
 
 /** Put any tabs that do not have a group into the active group */
@@ -423,29 +420,24 @@ async function salvageGrouplessTabs() {
   const windows = {};
   const tWindows = await browser.windows.getAll({});
 
-  tWindows.forEach(async (window) => {
-    windows[window.id] = { groups: null };
-    windows[window.id].groups = await browser.sessions.getWindowValue(window.id, 'groups');
-  });
+  await Promise.all(tWindows.map(async (window) => {
+    windows[window.id] = {
+      groups: await browser.sessions.getWindowValue(window.id, 'groups') || [],
+      activeGroup: await browser.sessions.getWindowValue(window.id, 'activeGroup'),
+    };
+  }));
 
   // check all tabs
   const tabs = await browser.tabs.query({});
 
-  tabs.forEach(async (tab) => {
+  await Promise.all(tabs.map(async (tab) => {
     const groupId = await browser.sessions.getTabValue(tab.id, 'groupId');
+    const { groups, activeGroup } = windows[tab.windowId];
 
-    let groupExists = false;
-    (windows[tab.windowId].groups).forEach((group) => {
-      if (group.id === groupId) {
-        groupExists = true;
-      }
-    });
-
-    if (!groupExists && groupId !== -1) {
-      const activeGroup = await browser.sessions.getWindowValue(tab.windowId, 'activeGroup');
+    if (groupId !== -1 && !groups.some((group) => group.id === groupId)) {
       await browser.sessions.setTabValue(tab.id, 'groupId', activeGroup);
     }
-  });
+  }));
 }
 
 async function init() {
@@ -468,6 +460,20 @@ async function init() {
   browser.tabs.onUpdated.addListener((...args) => {
     domainRulesQueue = domainRulesQueue.then(() => applyDomainRules(...args)).catch(console.error);
   }, { properties: ['url'] });
+  // rules changed: re-evaluate every open tab against them right away
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'sync' || !changes.domainRules) return;
+    domainRulesQueue = domainRulesQueue.then(async () => {
+      const tabs = await browser.tabs.query({});
+      // sequential, same reason as above
+      await tabs.reduce(
+        (prev, tab) => prev.then(() => applyDomainRules(tab.id, { url: tab.url }, tab)),
+        Promise.resolve(),
+      );
+      // tabs may have moved between existing groups; refresh the open view
+      browser.runtime.sendMessage({ action: 'groupsChanged' }).catch(() => {});
+    }).catch(console.error);
+  });
 }
 
 init();
