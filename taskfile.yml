@@ -1,5 +1,8 @@
 version: '3'
 
+# AMO signing keys: WEB_EXT_API_KEY / WEB_EXT_API_SECRET (git-ignored, see sign task)
+dotenv: ['.env']
+
 vars:
   # ponytail: no .nvmrc in repo, uses nvm's default Node; add .nvmrc to pin one
   NODE: 'bash -c ''export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh" >/dev/null; nvm use default >/dev/null; exec "$@"'' --'
@@ -36,13 +39,23 @@ tasks:
     cmds:
       - '{{.NODE}} npx web-ext build -s src --overwrite-dest'
 
+  sign:
+    desc: Sign extension via AMO (unlisted) into web-ext-artifacts/; bump manifest version first
+    deps: [setup]
+    preconditions:
+      - sh: test -n "$WEB_EXT_API_KEY" && test -n "$WEB_EXT_API_SECRET"
+        msg: 'Fill WEB_EXT_API_KEY and WEB_EXT_API_SECRET in .env (see .env.example)'
+    cmds:
+      # web-ext reads the keys from the environment, so they never hit the command line
+      - '{{.NODE}} npx web-ext sign -s src --channel=unlisted'
+
   install:deved:
     desc: Install build into Firefox Developer Edition profile (restart Firefox to load)
     deps: [build]
     vars:
       PROFILE:
         sh: ls -d ~/.mozilla/firefox/*.dev-edition-default
-      ID: panorama-tab-groups@example.com
+      ID: marko.koivusalo@gmail.com
     cmds:
       - mkdir -p "{{.PROFILE}}/extensions"
       - cp "$(ls -t web-ext-artifacts/*.zip | head -1)" "{{.PROFILE}}/extensions/{{.ID}}.xpi"
