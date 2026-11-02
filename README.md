@@ -1,6 +1,6 @@
-# Panorama Tab Groups
+# Panorama NG
 
-Effective Immediately: Feature Code Freeze while CI pipeline implemented to add linting and tests to clean code. Breaking changes potentially incoming
+Panorama NG is a fork of [Panorama Tab Groups](https://github.com/projectdelphai/panorama-tab-groups).
 
 ## Description
 

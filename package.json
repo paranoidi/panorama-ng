@@ -1,5 +1,5 @@
 {
-  "name": "panorama-tab-groups",
+  "name": "panorama-ng",
   "version": "0.0.1",
   "description": "Tab Groups with Panorama View",
   "main": "index.js",
@@ -13,14 +13,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/projectdelphai/panorama-tab-groups.git"
+    "url": "git+https://github.com/paranoidi/panorama-ng.git"
   },
   "author": "Reuben Castelino",
   "license": "MPL-2.0",
   "bugs": {
-    "url": "https://github.com/projectdelphai/panorama-tab-groups/issues"
+    "url": "https://github.com/paranoidi/panorama-ng/issues"
   },
-  "homepage": "https://github.com/projectdelphai/panorama-tab-groups#readme",
+  "homepage": "https://github.com/paranoidi/panorama-ng#readme",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
     "@eslint/js": "^10.0.1",
