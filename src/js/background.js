@@ -1,8 +1,6 @@
 import { loadOptions } from './_share/options.js';
 import { matchDomainRule } from './_share/utils.js';
 
-const manifest = browser.runtime.getManifest();
-
 window.backgroundState = {
   openingView: false,
   openingBackup: false,
@@ -498,7 +496,7 @@ function onRuntimeInstallNotification(details) {
   // Open new tab to the release notes after update
   if (details.reason === 'update') {
     browser.tabs.create({
-      url: `https://github.com/projectdelphai/panorama-tab-groups/releases/tag/${manifest.version}`,
+      url: 'https://github.com/paranoidi/panorama-ng/releases',
     });
   }
 }
