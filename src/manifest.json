@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "Panorama NG",
     "description": "Tab Groups with Panorama View",
-    "version": "0.8.14",
+    "version": "0.8.15",
     "default_locale": "en",
     "browser_specific_settings": {
         "gecko": {
