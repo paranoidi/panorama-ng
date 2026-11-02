@@ -2,6 +2,28 @@
 
 Panorama NG is a fork of [Panorama Tab Groups](https://github.com/projectdelphai/panorama-tab-groups).
 
+## New features
+
+Compared to the last upstream Panorama Tab Groups release:
+
+- **Domain rules** – the ⇢ toolbar button opens a rule editor that maps domains to groups. Tabs opening a matching domain move to that group automatically, and the group is created if missing. Patterns support wildcards anywhere (`*.reddit.com`, `192.168.*`, `*.example.*`); `*.example.com` also matches `example.com`. Saving rules re-sorts already open tabs.
+- **Multi-tab selection** – Ctrl/Cmd+click selects several tabs; dragging one of them moves them all.
+- **"Create new group" drop target** – while dragging tabs, a drop zone appears in the bottom-right corner, so a new group can be made even when tiling leaves no free space.
+- **Auto-arrange toggle** – the lightbulb toolbar button arranges groups automatically when a new group is created (blue = on). Choosing free-form layout turns it off. Groups created by domain rules while the view is closed are arranged when the view opens.
+- **Escape cancels a group rename.**
+
+## Other improvements
+
+- The view remembers each window's layout mode (free-form or tiling) instead of always opening in free-form.
+- Faster view opening: favicons and thumbnails no longer block rendering (suspended tabs used to stall it).
+- Tabs are sized correctly on first render.
+- Tabs without a group at startup are assigned to one instead of ending up hidden.
+- Dropping a tab after another tab puts it in the right browser position.
+- Toolbar icons are readable in dark mode.
+- The popup view was removed; the toolbar button always opens the full view.
+- Release notes after an update open this project's releases page.
+- All dependencies have been updated.
+
 ## Description
 
 Panorama Tab Groups is an easy way to organize a lot of tabs. You can visually group related tabs and switch between groups.
@@ -12,7 +34,9 @@ Panorama Tab Groups is an updated and maintained fork of [Panorama View](https:/
 
 ## Installation
 
-Panorama Tab Groups is available as a Firefox Add-on [here](https://addons.mozilla.org/en-US/firefox/addon/panorama-tab-groups/). Just follow the link, click "Add to Firefox", and you're good to go.
+Original Panorama Tab Groups is available as a Firefox Add-on [here](https://addons.mozilla.org/en-US/firefox/addon/panorama-tab-groups/). Just follow the link, click "Add to Firefox", and you're good to go.
+
+Panorama NG will be published once local testing phase is completed.
 
 ## Usage
 
