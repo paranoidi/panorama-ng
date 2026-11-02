@@ -149,3 +149,7 @@
 .tab.small .close {
 	display: none;
 }
+
+.tab.multi .inner {
+	outline: #2ac3a2 3px solid !important;
+}

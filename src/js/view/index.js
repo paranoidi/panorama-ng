@@ -1,6 +1,6 @@
 import { getGroupId } from './tabs.js';
 import {
-  tabMoved, groupDragOver, outsideDrop, createDragIndicator,
+  tabMoved, groupDragOver, outsideDrop, createDragIndicator, createNewGroupDrop,
 } from './drag.js';
 import {
   groupNodes, initGroupNodes, closeGroup, makeGroupNode,
@@ -302,6 +302,7 @@ async function initView() {
   view.groupsNode = document.getElementById('groups');
 
   view.groupsNode.appendChild(createDragIndicator());
+  document.body.appendChild(createNewGroupDrop());
 
   await groups.init();
 

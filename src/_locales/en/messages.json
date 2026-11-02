@@ -5,6 +5,9 @@
     "newGroupButton": {
         "message": "Add new group"
     },
+    "createNewGroup": {
+        "message": "Create new group"
+    },
     "freeformButton": {
         "message": "Free-form alignment"
     },

@@ -30,6 +30,11 @@ export function makeTabNode(tab) {
     event.preventDefault();
     event.stopPropagation();
 
+    if (event.ctrlKey || event.metaKey) {
+      if (!node.classList.contains('pinned')) node.classList.toggle('multi');
+      return;
+    }
+
     await browser.tabs.update(tab.id, { active: true });
   }, false);
 
