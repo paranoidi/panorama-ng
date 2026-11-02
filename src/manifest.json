@@ -4,9 +4,12 @@
     "description": "Tab Groups with Panorama View",
     "version": "0.8.12",
     "default_locale": "en",
-    "applications": {
+    "browser_specific_settings": {
         "gecko": {
-            "id": "panorama-tab-groups@example.com"
+            "id": "panorama-tab-groups@example.com",
+            "data_collection_permissions": {
+                "required": ["none"]
+            }
         }
     },
     "icons": {

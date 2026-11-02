@@ -233,7 +233,7 @@ async function triggerCommand(command) {
 
 /** Open the Panorama View tab, or return to the last open tab if Panorama View is currently open */
 async function toggleView() {
-  const extTabs = await browser.tabs.query({ url: browser.extension.getURL('view.html'), currentWindow: true });
+  const extTabs = await browser.tabs.query({ url: browser.runtime.getURL('view.html'), currentWindow: true });
   if (extTabs.length > 0) {
     const currentTab = (await browser.tabs.query({ active: true, currentWindow: true }))[0];
     // switch to last accessed tab in window
