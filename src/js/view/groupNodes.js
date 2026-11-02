@@ -447,7 +447,11 @@ export function makeGroupNode(group) {
   }, false);
 
   input.addEventListener('keydown', (event) => {
-    if (event.keyCode === 13) {
+    if (event.key === 'Enter') {
+      input.blur();
+    } else if (event.key === 'Escape') {
+      // abort: restore the committed name, blur then saves it unchanged
+      input.value = name.textContent;
       input.blur();
     }
   }, false);
@@ -457,8 +461,8 @@ export function makeGroupNode(group) {
     input.setSelectionRange(0, 0);
 
     name.innerHTML = '';
-    name.appendChild(document.createTextNode(this.value));
-    groups.rename(group.id, this.value);
+    name.appendChild(document.createTextNode(input.value));
+    groups.rename(group.id, input.value);
 
     header.addEventListener('mousedown', moveFunc, false);
 
