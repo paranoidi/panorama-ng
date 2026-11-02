@@ -23,12 +23,24 @@
 			<div id="settings" class="button"></div>
             <div id="freeform" class="button"></div>
             <div id="tiling" class="button"></div>
+            <div id="domainRulesButton" class="button">⇢</div>
 			<div id="pinnedTabs"></div>
             <div id="search bar">
                 <input type="text" placeholder="Search: " id="tab-search">
             </div>
 		</div>
 		<div id="groups" class="dragscroll"></div>
+		<dialog id="domainRulesDialog">
+			<form method="dialog">
+				<p id="domainRulesHelp"></p>
+				<table id="domainRulesTable">
+					<thead><tr><th data-i18n="domainRulesDomain"></th><th data-i18n="domainRulesGroup"></th><th data-i18n="domainRulesAction"></th></tr></thead>
+					<tbody></tbody>
+				</table>
+				<datalist id="domainRulesGroupNames"></datalist>
+				<p><button value="save">OK</button> <button value="cancel" formnovalidate>Cancel</button></p>
+			</form>
+		</dialog>
 	</body>
 
 </html>

@@ -6,6 +6,7 @@
   "scripts": {
     "test": "npm-run-all test:*",
     "test:lint": "npm run lint",
+    "test:unit": "node test/domainRules.test.mjs",
     "lint": "npm-run-all lint:*",
     "lint:eslint": "eslint .",
     "lint:webext": "web-ext -s src lint"

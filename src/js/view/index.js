@@ -12,6 +12,7 @@ import {
 } from './tabNodes.js';
 import * as groups from './groups.js';
 import { loadOptions } from '../_share/options.js';
+import { newElement } from '../_share/utils.js';
 
 const view = {
   windowId: -1,
@@ -332,6 +333,66 @@ async function initView() {
     setLayoutMode('tiling');
   }, false);
 
+  // Domain -> group rules editor
+  const rulesDialog = document.getElementById('domainRulesDialog');
+  const rulesBody = rulesDialog.querySelector('tbody');
+  const i18n = (key) => browser.i18n.getMessage(key);
+  document.getElementById('domainRulesButton').title = i18n('domainRulesButton');
+  document.getElementById('domainRulesHelp').textContent = i18n('domainRulesHelp');
+  rulesDialog.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = i18n(el.dataset.i18n); });
+
+  // Row with pattern/group inputs and a Delete (or, for the trailing row, Add) button
+  const ruleRow = ({ pattern = '', group = '' } = {}, isNew = false) => {
+    const button = newElement('button', {
+      type: 'button',
+      class: isNew ? 'rule-add' : 'rule-delete',
+      title: i18n(isNew ? 'domainRulesAdd' : 'domainRulesDelete'),
+      content: isNew ? '＋' : '🗑',
+    });
+    const row = newElement('tr', {}, [
+      newElement('td', {}, [newElement('input', { class: 'rule-pattern', placeholder: '*.reddit.com' })]),
+      newElement('td', {}, [newElement('input', { class: 'rule-group', placeholder: 'reddit', list: 'domainRulesGroupNames' })]),
+      newElement('td', {}, [button]),
+    ]);
+    row.querySelector('.rule-pattern').value = pattern;
+    row.querySelector('.rule-group').value = group;
+    button.addEventListener('click', () => {
+      if (!isNew) {
+        row.remove();
+        return;
+      }
+      const [p, g] = row.querySelectorAll('input');
+      if (!p.value.trim() || !g.value.trim()) return;
+      row.before(ruleRow({ pattern: p.value, group: g.value }));
+      p.value = '';
+      g.value = '';
+      p.focus();
+    });
+    return row;
+  };
+
+  document.getElementById('domainRulesButton').addEventListener('click', async () => {
+    const { domainRules } = await loadOptions();
+    rulesBody.replaceChildren(...domainRules.map((rule) => ruleRow(rule)), ruleRow({}, true));
+    const groupNames = [];
+    groups.forEach((group) => groupNames.push(newElement('option', { value: group.name })));
+    document.getElementById('domainRulesGroupNames').replaceChildren(...groupNames);
+    rulesDialog.showModal();
+  }, false);
+  rulesDialog.addEventListener('close', () => {
+    if (rulesDialog.returnValue !== 'save') return;
+    // the trailing "new" row is saved too if filled in
+    const domainRules = [...rulesBody.rows]
+      .map((row) => ({
+        pattern: row.querySelector('.rule-pattern').value.trim(),
+        group: row.querySelector('.rule-group').value.trim(),
+      }))
+      .filter((rule) => rule.pattern && rule.group);
+    browser.storage.sync.set({ domainRules });
+  });
+  // keyInput's Enter handler would otherwise switch tabs while typing rules
+  rulesDialog.addEventListener('keydown', (e) => e.stopPropagation());
+
   // Listen for search input
   document.getElementById('tab-search').addEventListener('input', searchTabs);
 
@@ -378,6 +439,9 @@ async function initView() {
     ],
   });
   browser.tabs.onMoved.addListener(tabMoved);
+  browser.runtime.onMessage.addListener((message) => {
+    if (message.action === 'groupsChanged') queueReload();
+  });
   browser.tabs.onAttached.addListener(tabAttached);
   browser.tabs.onDetached.addListener(tabDetached);
 

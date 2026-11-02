@@ -1,4 +1,5 @@
 import { loadOptions } from './_share/options.js';
+import { matchDomainRule } from './_share/utils.js';
 
 const manifest = browser.runtime.getManifest();
 
@@ -322,6 +323,51 @@ async function newGroupUid(windowId) {
   return uid;
 }
 
+/** Move a tab to the group named by a matching domain rule */
+async function applyDomainRules(tabId, changeInfo, tab) {
+  if (tab.pinned) return;
+  let hostname;
+  try {
+    ({ hostname } = new URL(changeInfo.url));
+  } catch {
+    return;
+  }
+  const groupName = matchDomainRule((await loadOptions()).domainRules, hostname);
+  if (!groupName) return;
+
+  const currentGroup = await browser.sessions.getTabValue(tabId, 'groupId');
+  if (currentGroup === -1) return;
+
+  const groups = await browser.sessions.getWindowValue(tab.windowId, 'groups');
+  let group = groups.find((g) => g.name.toLowerCase() === groupName.toLowerCase());
+  if (!group) {
+    const id = await newGroupUid(tab.windowId);
+    // ponytail: placed top-left; the view's tiling/resize sorts out the layout
+    group = {
+      id,
+      name: groupName,
+      containerId: 'firefox-default',
+      rect: {
+        x: 0, y: 0, w: 0.2, h: 0.2,
+      },
+      lastMoved: Date.now(),
+    };
+    groups.push(group);
+    await browser.sessions.setWindowValue(tab.windowId, 'groups', groups);
+    changeMenu({ action: 'createMenuItem', groupId: id.toString(), groupName });
+    // open view holds its own copy of the groups list; make it reload instead of overwriting ours
+    browser.runtime.sendMessage({ action: 'groupsChanged' }).catch(() => {});
+  }
+  if (currentGroup === group.id) return;
+
+  await browser.sessions.setTabValue(tabId, 'groupId', group.id);
+  if (tab.active) {
+    // can't hide the active tab, so follow it into its new group
+    await browser.sessions.setWindowValue(tab.windowId, 'activeGroup', group.id);
+  }
+  await toggleVisibleTabs(await browser.sessions.getWindowValue(tab.windowId, 'activeGroup'));
+}
+
 /** Create the first group in a window
  * This handles new windows and, during installation, existing windows
  * that do not yet have a group */
@@ -417,6 +463,11 @@ async function init() {
   browser.tabs.onAttached.addListener(tabAttached);
   browser.tabs.onDetached.addListener(tabDetached);
   browser.tabs.onActivated.addListener(tabActivated);
+  // serialized so two tabs loading the same new domain don't both create its group
+  let domainRulesQueue = Promise.resolve();
+  browser.tabs.onUpdated.addListener((...args) => {
+    domainRulesQueue = domainRulesQueue.then(() => applyDomainRules(...args)).catch(console.error);
+  }, { properties: ['url'] });
 }
 
 init();

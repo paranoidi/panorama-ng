@@ -50,6 +50,21 @@ body {
 	background-image: url(/icons/plus_dark.svg);
 }
 
+#domainRulesButton {
+	line-height: 28px;
+	text-align: center;
+	font-size: 18px;
+	cursor: pointer;
+}
+
+#domainRulesTable th {
+	text-align: left;
+}
+
+#domainRulesTable button {
+	cursor: pointer;
+}
+
 #settings {
 	background-image: url(/icons/preferences_dark.svg);
 }

@@ -145,5 +145,26 @@
     },
     "sendTab": {
         "message": "Send To Group"
+    },
+    "domainRulesButton": {
+        "message": "Domain rules"
+    },
+    "domainRulesHelp": {
+        "message": "\"*.example.com\" also matches example.com. The first matching rule wins; its group is created if missing."
+    },
+    "domainRulesDomain": {
+        "message": "Domain"
+    },
+    "domainRulesGroup": {
+        "message": "Tab group"
+    },
+    "domainRulesAction": {
+        "message": "Action"
+    },
+    "domainRulesAdd": {
+        "message": "Add"
+    },
+    "domainRulesDelete": {
+        "message": "Delete"
     }
 }

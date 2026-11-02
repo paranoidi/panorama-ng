@@ -3,6 +3,7 @@ export const defaultOptions = (() => {
   let options = {
     toolbarPosition: 'top',
     autoArrange: true,
+    domainRules: [], // [{ pattern, group }]
     shortcut: {
       'activate-next-group': {
         disabled: false,

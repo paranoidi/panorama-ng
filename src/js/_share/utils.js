@@ -84,3 +84,17 @@ export function formatByteSize(bytes) {
   if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(3)} MiB`;
   return `${(bytes / 1073741824).toFixed(3)} GiB`;
 }
+
+/** First rule's group whose pattern matches; "*.x.com" matches x.com and its subdomains */
+export function matchDomainRule(rules, hostname) {
+  const rule = rules.find(({ pattern, group }) => {
+    if (!pattern || !group) return false;
+    const p = pattern.trim().toLowerCase();
+    if (p.startsWith('*.')) {
+      const base = p.slice(2);
+      return hostname === base || hostname.endsWith(`.${base}`);
+    }
+    return hostname === p;
+  });
+  return rule && rule.group.trim();
+}
