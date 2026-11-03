@@ -368,7 +368,7 @@ function groupTransform(group, node, top, right, bottom, left, elem) {
     document.getElementsByTagName('body')[0].removeAttribute('style');
 
     document.removeEventListener('mousemove', onmousemove);
-  }, false);
+  }, { once: true }); // left attached, every later mouseup re-saved this drag's rect
 }
 
 export function makeGroupNode(group) {
