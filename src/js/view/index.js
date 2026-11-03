@@ -3,7 +3,7 @@ import {
   tabMoved, groupDragOver, outsideDrop, createDragIndicator, createNewGroupDrop,
 } from './drag.js';
 import {
-  initGroupNodes, closeGroup, makeGroupNode,
+  initGroupNodes, makeGroupNode,
   fillGroupNodes, insertTab, resizeGroups, raiseGroup, updateGroupFit, activateTiling,
 } from './groupNodes.js';
 import {
@@ -201,12 +201,10 @@ function tabDetached(tabId, detachInfo) {
   }
 }
 
-async function doubleClick(e) {
-  if (e.target.className === 'content transition') {
-    const groupID = e.target.getAttribute('groupid');
-    const group = groups.get(groupID);
-    closeGroup(e.target, group);
-  } else if (e.target.id === 'groups') {
+// ponytail: double-clicking a group's empty area used to "close" it but always threw
+// (string id lookup); dropped rather than fixed, a stray double-click shouldn't close tabs
+function doubleClick(e) {
+  if (e.target.id === 'groups') {
     createGroup(e.clientX, e.clientY);
   }
 }
