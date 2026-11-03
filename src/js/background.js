@@ -435,9 +435,8 @@ async function createGroupInWindowIfMissing(browserWindow) {
     console.log(`No groups found for window ${browserWindow.id}!`);
     await createGroupInWindow(browserWindow);
   }
-  browser.browserAction.setTitle({ title: 'Active Group: Unnamed group', windowId: browserWindow.id });
-  browser.browserAction.setBadgeText({ text: '1', windowId: browserWindow.id });
-  browser.browserAction.setBadgeBackgroundColor({ color: '#666666' });
+  // restored windows keep their groups; show their real name and count
+  await setActionTitle(browserWindow.id);
 }
 /** Make sure each window has a group */
 async function setupWindows() {
