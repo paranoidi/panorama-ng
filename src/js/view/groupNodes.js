@@ -438,13 +438,14 @@ export function makeGroupNode(group) {
     if (!editing) {
       editing = true;
 
-      header.removeEventListener('mousedown', moveFunc, false);
-
       header.classList.add('edit');
       input.setSelectionRange(0, input.value.length);
       input.focus();
     }
   }, false);
+
+  // keep clicks in the input from starting a group drag, so the cursor can be placed
+  input.addEventListener('mousedown', (event) => event.stopPropagation(), false);
 
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
@@ -463,8 +464,6 @@ export function makeGroupNode(group) {
     name.innerHTML = '';
     name.appendChild(document.createTextNode(input.value));
     groups.rename(group.id, input.value);
-
-    header.addEventListener('mousedown', moveFunc, false);
 
     editing = false;
   }, false);
