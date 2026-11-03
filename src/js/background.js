@@ -120,8 +120,14 @@ async function toggleVisibleTabs(activeGroup, noTabSelected, windowId) {
   }));
 
   if (noTabSelected) {
-    showTabs.sort((tabA, tabB) => tabB.lastAccessed - tabA.lastAccessed);
-    await browser.tabs.update(showTabs[0].id, { active: true });
+    if (showTabs.length === 0) {
+      // empty group: give it a tab (tabCreated puts it in the active group),
+      // otherwise the old group's active tab can't be hidden
+      await browser.tabs.create(windowId ? { windowId } : {});
+    } else {
+      showTabs.sort((tabA, tabB) => tabB.lastAccessed - tabA.lastAccessed);
+      await browser.tabs.update(showTabs[0].id, { active: true });
+    }
   }
 
   await browser.tabs.hide(hideTabIds);
