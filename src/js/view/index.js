@@ -89,9 +89,11 @@ async function captureThumbnail(tab) {
 async function captureThumbnails() {
   const tabs = await browser.tabs.query({ currentWindow: true, discarded: false });
 
-  tabs.forEach(async (tab) => {
-    await captureThumbnail(tab); // await to lessen strain on browser
-  });
+  // one at a time to lessen strain on browser; forEach(async) ran them all at once
+  await tabs.reduce(
+    (prev, tab) => prev.then(() => captureThumbnail(tab)).catch(console.error),
+    Promise.resolve(),
+  );
 }
 
 async function createGroup(x = 75, y = 75) {
