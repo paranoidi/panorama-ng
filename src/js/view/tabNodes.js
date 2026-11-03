@@ -121,7 +121,8 @@ export async function setActiveTabNode(tabId) {
     }
   });
 
-  tabNodes[lastActive].tab.classList.add('selected');
+  // -1 when the view is the window's only tab
+  if (tabNodes[lastActive]) tabNodes[lastActive].tab.classList.add('selected');
   activeTabId = lastActive;
 }
 
