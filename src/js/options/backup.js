@@ -83,87 +83,93 @@ async function openBackup(data) {
 
   background.backgroundState.openingBackup = true;
 
-  data.windows.forEach(async (wi) => {
-    const groups = [];
+  // flag must stay set until every window and tab exists, or the background
+  // script treats them as new and assigns default groups
+  try {
+    await Promise.all(data.windows.map(async (wi) => {
+      const groups = [];
 
-    if (wi.groups.length === 0) {
-      console.log('no groups in backup, trying to retrieve them from tabs');
-      const newGroupIds = getGroupIdsFromTabs(wi);
+      if (wi.groups.length === 0) {
+        console.log('no groups in backup, trying to retrieve them from tabs');
+        const newGroupIds = getGroupIdsFromTabs(wi);
 
-      // TODO: eval rect by minimum size and fit it optimally on screen
+        // TODO: eval rect by minimum size and fit it optimally on screen
 
-      let curX = 0.0;
-      const delta = 1 / newGroupIds.length;
+        let curX = 0.0;
+        const delta = 1 / newGroupIds.length;
 
-      for (let i = 0; i < newGroupIds.length; i += 1) {
-        const gId = newGroupIds[i];
-        wi.groups.push({
-          id: gId,
-          name: `Group ${gId}`,
-          rect: {
-            x: curX,
-            y: 0,
-            w: delta,
-            h: 0.5,
-          },
+        for (let i = 0; i < newGroupIds.length; i += 1) {
+          const gId = newGroupIds[i];
+          wi.groups.push({
+            id: gId,
+            name: `Group ${gId}`,
+            rect: {
+              x: curX,
+              y: 0,
+              w: delta,
+              h: 0.5,
+            },
+          });
+          curX += delta;
+        }
+      }
+
+      wi.groups.forEach((gi) => {
+        groups.push({
+          id: gi.id,
+          name: gi.name,
+          containerId: 'firefox-default',
+          rect: gi.rect,
+          tabCount: 0,
         });
-        curX += delta;
-      }
-    }
-
-    wi.groups.forEach((gi) => {
-      groups.push({
-        id: gi.id,
-        name: gi.name,
-        containerId: 'firefox-default',
-        rect: gi.rect,
-        tabCount: 0,
       });
-    });
 
-    let windata = {};
-    if (wi.position) {
-      windata = wi.position;
-    }
-    const window = await browser.windows.create({});
-    await browser.windows.update(window.id, windata);
-
-    await browser.sessions.setWindowValue(window.id, 'groups', groups);
-    await browser.sessions.setWindowValue(window.id, 'activeGroup', wi.activeGroup);
-    await browser.sessions.setWindowValue(window.id, 'groupIndex', wi.groupIndex);
-
-    wi.tabs.forEach(async (ti) => {
-      // pinned tabs are not allowed to be discarded
-      let bdiscarded;
-      if (ti.pinned === true) {
-        bdiscarded = false;
-      } else {
-        bdiscarded = true;
+      let windata = {};
+      if (wi.position) {
+        windata = wi.position;
       }
+      const window = await browser.windows.create({});
+      await browser.windows.update(window.id, windata);
 
-      const tab = await browser.tabs.create({
-        url: ti.url,
-        active: false,
-        discarded: bdiscarded,
+      await browser.sessions.setWindowValue(window.id, 'groups', groups);
+      await browser.sessions.setWindowValue(window.id, 'activeGroup', wi.activeGroup);
+      await browser.sessions.setWindowValue(window.id, 'groupIndex', wi.groupIndex);
+
+      // tabs created in parallel would land in the strip in random order
+      await wi.tabs.reduce((prev, ti) => prev.then(async () => {
+        // pinned tabs are not allowed to be discarded
+        let bdiscarded;
+        if (ti.pinned === true) {
+          bdiscarded = false;
+        } else {
+          bdiscarded = true;
+        }
+
+        const tab = await browser.tabs.create({
+          url: ti.url,
+          active: false,
+          discarded: bdiscarded,
+          windowId: window.id,
+          pinned: ti.pinned,
+        }).catch((err) => { console.log(err); });
+
+        if (tab) {
+          await browser.sessions.setTabValue(tab.id, 'groupId', parseInt(ti.groupId, 10));
+          // await browser.tabs.discard(tab.id);
+        }
+      }), Promise.resolve());
+
+      // Show freeform view
+      const freeformViewTab = await browser.tabs.create({
+        url: '/view.html',
+        active: true,
         windowId: window.id,
-        pinned: ti.pinned,
-      }).catch((err) => { console.log(err); });
-
-      if (tab) {
-        await browser.sessions.setTabValue(tab.id, 'groupId', parseInt(ti.groupId, 10));
-        // await browser.tabs.discard(tab.id);
-      }
-    });
-
-    // Show freeform view
-    const freeformViewTab = await browser.tabs.create({
-      url: '/view.html',
-      active: true,
-      windowId: window.id,
-    });
-    await browser.sessions.setTabValue(freeformViewTab.id, 'groupId', -1);
-  });
-  background.backgroundState.openingBackup = false;
+      });
+      await browser.sessions.setTabValue(freeformViewTab.id, 'groupId', -1);
+    }));
+  } finally {
+    background.backgroundState.openingBackup = false;
+  }
 }
 
 export function loadBackup(input) {
