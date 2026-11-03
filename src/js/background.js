@@ -509,17 +509,6 @@ async function init() {
 
 init();
 
-// TODO: Remove? Is this used?
-function handleMessage(message, sender) { // eslint-disable-line no-unused-vars
-  if (message === 'activate-next-group') {
-    triggerCommand('activate-next-group');
-  } else if (message === 'activate-previous-group') {
-    triggerCommand('activate-previous-group');
-  }
-}
-
-browser.runtime.onMessageExternal.addListener(handleMessage);
-
 /*
  * Handle upboarding
  */
