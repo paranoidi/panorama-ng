@@ -134,8 +134,8 @@ async function toggleVisibleTabs(activeGroup, noTabSelected, windowId) {
   await browser.tabs.show(showTabIds);
 
   if (activeGroup >= 0) {
-    const window = await browser.windows.getLastFocused();
-    await setActionTitle(window.id, activeGroup);
+    // the window whose tabs were just toggled, not whichever was last focused
+    await setActionTitle(tabs[0].windowId, activeGroup);
   }
 }
 
