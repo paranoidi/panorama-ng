@@ -390,7 +390,7 @@ export function makeGroupNode(group) {
   const spacer = newElement('span', { class: 'spacer' });
   const input = newElement('input', { type: 'text', value: group.name });
 
-  const groupId = newElement('spawn', { class: 'group_id', content: group.id });
+  const groupId = newElement('span', { class: 'group_id', content: group.id });
   const tabCount = newElement('span', { class: 'tab_count' });
 
   const close = newElement('div', { class: 'close', title: browser.i18n.getMessage('closeGroup') });
