@@ -15,16 +15,24 @@ function removeGroupNode(groupId) {
   delete groupNodes[groupId];
 }
 
+async function removeGroup(group) {
+  await groups.remove(group.id);
+  removeGroupNode(group.id);
+  // new tabs join the active group; don't leave it pointing at a deleted one
+  const [first] = groups.getIds();
+  if (first !== undefined && await groups.getActive() === group.id) {
+    await groups.setActive(first);
+  }
+}
+
 export async function closeGroup(content, group) {
   const { childNodes } = content;
   const tabCount = childNodes.length - 1;
 
   if (tabCount > 0) {
-    console.log(tabCount);
     const confirmationText = getPluralForm(tabCount, browser.i18n.getMessage('closeGroupWarning', [tabCount]));
     if (window.confirm(confirmationText)) {
-      groups.remove(group.id);
-      removeGroupNode(group.id);
+      await removeGroup(group);
 
       forEachTab(async (tab) => {
         const groupId = await getGroupId(tab.id);
@@ -32,16 +40,9 @@ export async function closeGroup(content, group) {
           browser.tabs.remove(tab.id);
         }
       });
-      const first = true;
-      groups.forEach((g) => {
-        if (first) {
-          groups.setActive(g.id);
-        }
-      });
     }
   } else {
-    groups.remove(group.id);
-    removeGroupNode(group.id);
+    await removeGroup(group);
   }
 }
 
