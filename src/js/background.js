@@ -153,11 +153,13 @@ async function menuClicked(info, tab) {
     }
     default: {
       // see if we're sending multiple tabs
-      const tabs = await browser.tabs.query({ highlighted: true });
+      // every window has a highlighted/active tab, so scope queries to this one
+      const { windowId } = tab;
+      const tabs = await browser.tabs.query({ highlighted: true, windowId });
       // if you select multiple tabs, your active tab is selected as well
       // and needs to be filtered out
       if (tabs.length > 1) {
-        const activeTabId = (await browser.tabs.query({ active: true }))[0].id;
+        const activeTabId = (await browser.tabs.query({ active: true, windowId }))[0].id;
         tabs.forEach((tempTab) => {
           const tabId = tempTab.id;
           if (tabId !== activeTabId) {
@@ -167,9 +169,9 @@ async function menuClicked(info, tab) {
       } else {
       // otherwise just use the tab where the menu was clicked from
       // if you don't do multiselect, but just right click, the tab isn't actually highlighted
-        const activeTabId = (await browser.tabs.query({ active: true }))[0].id;
+        const activeTabId = (await browser.tabs.query({ active: true, windowId }))[0].id;
         if (activeTabId === tab.id) {
-          const visibleTabs = (await browser.tabs.query({ hidden: false }));
+          const visibleTabs = (await browser.tabs.query({ hidden: false, windowId }));
 
           // find position of active tab among visible tabs
           let tabIndex = 0;
