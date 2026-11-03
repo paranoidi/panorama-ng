@@ -17,19 +17,11 @@ async function newUid() {
 }
 
 function getIndex(id) {
-  let letVal = -1;
-  groups.forEach((group, index) => {
-    if (group.id === id) {
-      letVal = index;
-    }
-  });
-  return letVal;
+  return groups.findIndex((group) => group.id === id);
 }
 
 export function getLength() {
-  let length = 0;
-  groups.forEach(() => { length += 1; });
-  return length;
+  return groups.length;
 }
 
 export async function init() {
@@ -114,17 +106,10 @@ export function get(id) {
 }
 
 export function getIds() {
-  const arr = [];
-  groups.forEach((group) => {
-    arr.push(group.id);
-  });
-  return arr;
+  return groups.map((group) => group.id);
 }
 
-// confused why this is necessary tbh
+// module-private array, so callers iterate through this
 export function forEach(callback) {
-  // for (const i in groups) {
-  groups.forEach((group, i) => {
-    callback(groups[i]);
-  });
+  groups.forEach((group) => callback(group));
 }
