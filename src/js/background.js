@@ -32,7 +32,8 @@ function addRefreshMenuItem() {
 
 async function createMenuList() {
   const windowId = (await browser.windows.getCurrent()).id;
-  const groups = (await browser.sessions.getWindowValue(windowId, 'groups'));
+  // unset on a window that hasn't been initialised yet
+  const groups = (await browser.sessions.getWindowValue(windowId, 'groups')) || [];
   browser.menus.removeAll();
 
   browser.menus.create({
@@ -41,7 +42,6 @@ async function createMenuList() {
     contexts: ['tab'],
   });
 
-  // throws silent error if groups is undefined
   groups.forEach((group) => {
     browser.menus.create({
       id: group.id.toString(),
@@ -80,7 +80,7 @@ browser.runtime.onMessage.addListener(changeMenu);
 /** Set extension icon tooltip and numGroups to icon * */
 async function setActionTitle(windowId, activeGroup = null) {
   let name;
-  const groups = await browser.sessions.getWindowValue(windowId, 'groups');
+  const groups = await browser.sessions.getWindowValue(windowId, 'groups') || [];
 
   if (activeGroup === null) {
     activeGroup = await browser.sessions.getWindowValue(windowId, 'activeGroup');
