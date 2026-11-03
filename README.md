@@ -40,7 +40,7 @@ Panorama NG will be published once local testing phase is completed.
 
 ## Usage
 
-The default shortcut to switch to panorama view is Ctrl+Shift+F and you can to the next or previous tab group with Alt+W/Alt+Shift+W. Any of these shortcuts can be changed in the add-on preferences tab.
+The default shortcut to switch to panorama view is Ctrl+Alt+P and you can to the next or previous tab group with Alt+W/Alt+Shift+W. Any of these shortcuts can be changed in the add-on preferences tab.
 
 ## Contribution
 
