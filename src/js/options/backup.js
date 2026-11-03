@@ -229,39 +229,35 @@ export async function saveBackup() {
 
   const windows = await browser.windows.getAll({});
 
-  windows.forEach(async (wi, index) => {
-    const groups = await browser.sessions.getWindowValue(wi.id, 'groups');
+  // must finish collecting before the file is written below
+  await Promise.all(windows.map(async (wi, index) => {
+    const groups = await browser.sessions.getWindowValue(wi.id, 'groups') || [];
     const groupIndex = await browser.sessions.getWindowValue(wi.id, 'groupIndex');
     const activeGroup = await browser.sessions.getWindowValue(wi.id, 'activeGroup');
 
     data.windows[index] = {
-      groups: [], tabs: [], activeGroup, groupIndex,
+      groups: groups.map((gi) => ({ id: gi.id, name: gi.name, rect: gi.rect })),
+      tabs: [],
+      activeGroup,
+      groupIndex,
     };
 
-    groups.forEach((gi) => {
-      data.windows[index].groups.push({
-        id: gi.id,
-        name: gi.name,
-        rect: gi.rect,
-      });
-    });
-
     const tabs = await browser.tabs.query({ windowId: wi.id });
-    tabs.forEach(async (tab) => {
-      const groupId = await browser.sessions.getTabValue(tab.id, 'groupId');
-
-      if (groupId !== -1) {
+    const groupIds = await Promise.all(tabs.map((tab) => browser.sessions.getTabValue(tab.id, 'groupId')));
+    // keeps tab-strip order, unlike pushing from parallel callbacks
+    tabs.forEach((tab, i) => {
+      if (groupIds[i] !== -1) {
         data.windows[index].tabs.push({
           url: tab.url,
           title: tab.title,
-          groupId,
+          groupId: groupIds[i],
           index: tab.index,
           lastAccessed: tab.lastAccessed,
           pinned: tab.pinned,
         });
       }
     });
-  });
+  }));
 
   const blob = new Blob([JSON.stringify(data, null, '\t')], { type: 'application/json' });
   const dataUrl = window.URL.createObjectURL(blob);
