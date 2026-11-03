@@ -3,7 +3,7 @@ import {
   tabMoved, groupDragOver, outsideDrop, createDragIndicator, createNewGroupDrop,
 } from './drag.js';
 import {
-  groupNodes, initGroupNodes, closeGroup, makeGroupNode,
+  initGroupNodes, closeGroup, makeGroupNode,
   fillGroupNodes, insertTab, resizeGroups, raiseGroup, updateGroupFit, activateTiling,
 } from './groupNodes.js';
 import {
@@ -133,76 +133,14 @@ async function searchTabs() {
   setActiveTabNodeById(futureActiveTabId);
 }
 
-async function keyInput(e) {
-  if (e.key === 'ArrowRight') {
-    const activeTabId = getActiveTabId();
-    let groupId = await getGroupId(activeTabId);
-    let { childNodes } = groupNodes[groupId].content;
-
-    let i;
-    let tabId;
-    for (i = 0; i < childNodes.length; i += 1) {
-      tabId = Number(childNodes[i].getAttribute('tabId'));
-      if (tabId === activeTabId) {
-        break;
-      }
-    }
-
-    let newTabId = -1;
-    const max = childNodes.length - 2;
-    // check if at end or if tab not found
-    if (i === max || i === childNodes.length) {
-      const groupsLength = Object.keys(groupNodes).length;
-
-      const last = Object.keys(groupNodes)[groupsLength - 2];
-      if (groupId === last) {
-        const first = Object.keys(groupNodes)[0];
-        groupId = first;
-      } else {
-        const index = Object.keys(groupNodes).indexOf(groupId.toString());
-        groupId = Object.keys(groupNodes)[index + 1];
-      }
-      childNodes = groupNodes[groupId].content.childNodes;
-      newTabId = Number(childNodes[0].getAttribute('tabId'));
-    } else {
-      newTabId = Number(childNodes[i + 1].getAttribute('tabId'));
-    }
-
-    setActiveTabNodeById(newTabId);
-  } else if (e.key === 'ArrowLeft') {
-    const activeTabId = getActiveTabId();
-    let groupId = await getGroupId(activeTabId);
-    let { childNodes } = groupNodes[groupId].content;
-
-    let i;
-    for (i = 0; i < childNodes.length; i += 1) {
-      const tabId = Number(childNodes[i].getAttribute('tabId'));
-      if (tabId === activeTabId) {
-        break;
-      }
-    }
-
-    let newTabId = -1;
-    // check if at end or if tab not found
-    if (i === 0 || i === childNodes.length) {
-      const groupsLength = Object.keys(groupNodes).length;
-
-      // check if at last tab in group and switch to next group
-      const first = Object.keys(groupNodes)[0];
-      if (groupId === first) {
-        groupId = Object.keys(groupNodes)[groupsLength - 2];
-      } else {
-        const index = Object.keys(groupNodes).indexOf(groupId.toString());
-        groupId = Object.keys(groupNodes)[index - 1];
-      }
-      childNodes = groupNodes[groupId].content.childNodes;
-      const childNodesSize = Object.keys(childNodes).length - 2;
-      newTabId = Number(childNodes[childNodesSize].getAttribute('tabId'));
-    } else {
-      newTabId = Number(childNodes[i - 1].getAttribute('tabId'));
-    }
-
-    setActiveTabNodeById(newTabId);
+function keyInput(e) {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    // group tabs in display order, wrapping across groups; pinned tabs live outside #groups
+    const tabIds = [...view.groupsNode.querySelectorAll('.tab')].map((node) => Number(node.getAttribute('tabId')));
+    if (tabIds.length === 0) return;
+    const i = tabIds.indexOf(getActiveTabId()); // -1 (e.g. pinned) starts from the first tab
+    const step = e.key === 'ArrowRight' ? 1 : -1;
+    setActiveTabNodeById(tabIds[i < 0 ? 0 : (i + step + tabIds.length) % tabIds.length]);
   } else if (e.key === 'Enter') {
     browser.tabs.update(getActiveTabId(), { active: true });
   }
