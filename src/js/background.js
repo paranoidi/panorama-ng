@@ -328,11 +328,13 @@ async function tabActivated(activeInfo) {
   }
 
   // Set the window's active group to the new active tab's group
-  // If this is a newly-created tab, tabCreated() might not have set a
-  // groupId yet, so retry until it does.
-  const activeGroup = await browser.sessions.getTabValue(activeInfo.tabId, 'groupId');
+  let activeGroup = await browser.sessions.getTabValue(activeInfo.tabId, 'groupId');
 
-  if (activeGroup !== -1) {
+  if (activeGroup === undefined) {
+    // newly-created tab that tabCreated() hasn't assigned yet; it will join
+    // the window's active group, so keep that rather than storing undefined
+    activeGroup = await browser.sessions.getWindowValue(tab.windowId, 'activeGroup');
+  } else if (activeGroup !== -1) {
     // activated tab is not Panorama View tab
     await browser.sessions.setWindowValue(tab.windowId, 'activeGroup', activeGroup);
   }
