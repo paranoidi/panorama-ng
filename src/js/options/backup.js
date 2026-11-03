@@ -18,20 +18,22 @@ function convertBackup(tgData) {
       groupIndex: tabviewGroups.nextID,
       position: {},
     };
-    data.windows[wi].position = {
+    data.windows[index].position = {
       left: wi.screenX,
       top: wi.screenY,
       height: wi.height,
       width: wi.width,
     };
 
-    const nGroups = Object.keys(tabviewGroup).length;
+    // keyed by group id, not an array
+    const groupList = Object.values(tabviewGroup);
+    const nGroups = groupList.length;
     const gwidth = 0.25;
     let curX = 0.0;
     const deltaX = 1 / (nGroups < 4 ? 4 : nGroups + 1);
     let curY = 0.0;
     const deltaY = 1 / 32;
-    tabviewGroup.forEach((gkey) => {
+    groupList.forEach((gkey) => {
       data.windows[index].groups.push({
         id: gkey.id,
         name: gkey.title,
