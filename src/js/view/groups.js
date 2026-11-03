@@ -32,16 +32,6 @@ export function getLength() {
   return length;
 }
 
-export function getName(id) {
-  let retVal;
-  groups.forEach((group) => {
-    if (group.id === id) {
-      retVal = group.name;
-    }
-  });
-  return retVal;
-}
-
 export async function init() {
   windowId = (await browser.windows.getCurrent()).id;
   groups = (await browser.sessions.getWindowValue(windowId, 'groups')) || [];
