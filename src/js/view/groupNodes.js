@@ -233,12 +233,11 @@ export function resizeGroups(groupId, groupRect) {
   });
 }
 
-async function groupTransform(group, node, top, right, bottom, left, elem) {
-  // don't allow resizing if in tiling mode
-  const windowId = (await browser.windows.getCurrent()).id;
-  const layoutMode = await browser.sessions.getWindowValue(windowId, 'layoutMode');
-
-  if (layoutMode !== 'freeform') {
+function groupTransform(group, node, top, right, bottom, left, elem) {
+  // don't allow resizing if in tiling mode. Read the class, not the stored
+  // layoutMode: that is unset until a mode is first chosen, and awaiting it
+  // let a quick mouseup slip past before the listeners below were attached
+  if (document.body.classList.contains('tiling')) {
     return;
   }
 
