@@ -23,6 +23,7 @@ Compared to the last upstream Panorama Tab Groups release:
 - The popup view was removed; the toolbar button always opens the full view.
 - Release notes after an update open this project's releases page.
 - All dependencies have been updated.
+- New cross platform shortcut for displaying the panorama
 
 ## Description
 
@@ -35,8 +36,6 @@ Panorama Tab Groups is an updated and maintained fork of [Panorama View](https:/
 ## Installation
 
 Original Panorama Tab Groups is available as a Firefox Add-on [here](https://addons.mozilla.org/en-US/firefox/addon/panorama-tab-groups/). Just follow the link, click "Add to Firefox", and you're good to go.
-
-Panorama NG will be published once local testing phase is completed.
 
 ## Usage
 
