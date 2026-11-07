@@ -40,7 +40,7 @@ tasks:
       - '{{.NODE}} npx web-ext build -s src --overwrite-dest'
 
   sign:
-    desc: Sign extension via AMO (unlisted) into web-ext-artifacts/; bump manifest version first
+    desc: Sign a private test build via AMO (unlisted); uses up the version number, so `task release` needs a higher one
     deps: [setup]
     preconditions:
       - sh: test -n "$WEB_EXT_API_KEY" && test -n "$WEB_EXT_API_SECRET"
@@ -66,3 +66,39 @@ tasks:
         user_pref("extensions.autoDisableScopes", 14);
         JS
       - echo "Installed to {{.PROFILE}} - restart Firefox Developer Edition"
+
+  release:
+    desc: Publish the manifest version to AMO (listed) and GitHub; bump and commit the version first
+    deps: [setup]
+    vars:
+      VERSION: &version
+        sh: grep -m1 '"version"' src/manifest.json | cut -d'"' -f4
+    preconditions:
+      - sh: test -n "$WEB_EXT_API_KEY" && test -n "$WEB_EXT_API_SECRET"
+        msg: 'Fill WEB_EXT_API_KEY and WEB_EXT_API_SECRET in .env (see .env.example)'
+      - sh: gh auth status
+        msg: 'Log in with: gh auth login'
+      - sh: test "$(git branch --show-current)" = master && test -z "$(git status --porcelain)"
+        msg: 'Release from master with a clean working tree'
+      - sh: git fetch -q origin && test "$(git rev-parse HEAD)" = "$(git rev-parse origin/master)"
+        msg: 'Local master differs from origin/master; push or pull first'
+      - sh: test -z "$(git ls-remote --tags origin {{.VERSION}})"
+        msg: 'Tag {{.VERSION}} is already on GitHub; bump the version in src/manifest.json'
+    cmds:
+      - '{{.NODE}} npm test'
+      # ponytail: no wait for AMO review, so the GitHub release has no xpi and links to AMO instead
+      - '{{.NODE}} npx web-ext sign -s src --channel=listed --amo-metadata=amo-metadata.json --approval-timeout=0'
+      - task: release:github
+
+  release:github:
+    desc: Tag the manifest version and create its GitHub release (rerun this alone if `task release` fails after the AMO step)
+    vars:
+      VERSION: *version
+      # gh defaults to the upstream repo here, so always name the fork
+      REPO: paranoidi/panorama-ng
+    cmds:
+      - git tag {{.VERSION}}
+      - git push origin {{.VERSION}}
+      # ponytail: notes are README's cumulative feature list; use a changelog when releases need their own notes
+      - |
+        { echo "Install from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/panorama-ng/)."; echo; awk '/^## Description/{exit} /^## New features/{f=1} f' README.md; } | gh release create {{.VERSION}} -R {{.REPO}} --verify-tag --title {{.VERSION}} --notes-file -

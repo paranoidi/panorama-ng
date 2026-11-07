@@ -1,0 +1,8 @@
+{
+  "slug": "panorama-ng",
+  "categories": ["tabs"],
+  "description": {
+    "en-US": "Panorama NG is a fork of Panorama Tab Groups: visually group related tabs and switch between groups.\n\nNew compared to the last upstream release:\n- Domain rules: map domains to groups, and matching tabs move there automatically\n- Multi-tab selection: Ctrl/Cmd+click several tabs and drag them together\n- A \"create new group\" drop target while dragging tabs\n- Tiling lock: arrange groups automatically and lock them in place\n- Faster view opening\n\nOpen the view with Ctrl+Alt+P. Switch groups with Alt+W and Alt+Shift+W.\n\nSource and release notes: https://github.com/paranoidi/panorama-ng"
+  },
+  "version": { "license": "MPL-2.0" }
+}
