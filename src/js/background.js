@@ -354,8 +354,34 @@ async function newGroupUid(windowId) {
   return uid;
 }
 
+const MOVED_NOTIFICATION = 'tab-moved';
+// ponytail: one notification at a time; the latest move replaces the previous one
+let movedTab = null;
+let movedTimer;
+
+/** Tell the user where a background tab went, since it gets hidden immediately */
+async function notifyTabMoved(tab, group) {
+  movedTab = { tabId: tab.id, windowId: tab.windowId };
+  await browser.notifications.create(MOVED_NOTIFICATION, {
+    type: 'basic',
+    iconUrl: browser.runtime.getURL('icons/logo/logo-48.png'),
+    title: browser.i18n.getMessage('tabMovedTitle', group.name),
+    message: browser.i18n.getMessage('tabMovedMessage'),
+  });
+  clearTimeout(movedTimer);
+  movedTimer = setTimeout(() => browser.notifications.clear(MOVED_NOTIFICATION), 3000);
+}
+
+browser.notifications.onClicked.addListener(async (id) => {
+  if (id !== MOVED_NOTIFICATION || !movedTab) return;
+  browser.notifications.clear(MOVED_NOTIFICATION);
+  await browser.windows.update(movedTab.windowId, { focused: true });
+  // activating the tab switches to its group via tabActivated; tab may be closed by now
+  await browser.tabs.update(movedTab.tabId, { active: true }).catch(() => {});
+});
+
 /** Move a tab to the group named by a matching domain rule */
-async function applyDomainRules(tabId, changeInfo, tab) {
+async function applyDomainRules(tabId, changeInfo, tab, notify = false) {
   if (tab.pinned) return;
   let hostname;
   try {
@@ -396,7 +422,11 @@ async function applyDomainRules(tabId, changeInfo, tab) {
     // can't hide the active tab, so follow it into its new group
     await browser.sessions.setWindowValue(tab.windowId, 'activeGroup', group.id);
   }
-  await toggleVisibleTabs(await browser.sessions.getWindowValue(tab.windowId, 'activeGroup'));
+  const activeGroup = await browser.sessions.getWindowValue(tab.windowId, 'activeGroup');
+  await toggleVisibleTabs(activeGroup);
+  if (notify && !tab.active && group.id !== activeGroup) {
+    notifyTabMoved(tab, group).catch(console.error);
+  }
 }
 
 /** Create the first group in a window
@@ -489,7 +519,9 @@ async function init() {
   // serialized so two tabs loading the same new domain don't both create its group
   let domainRulesQueue = Promise.resolve();
   browser.tabs.onUpdated.addListener((...args) => {
-    domainRulesQueue = domainRulesQueue.then(() => applyDomainRules(...args)).catch(console.error);
+    domainRulesQueue = domainRulesQueue
+      .then(() => applyDomainRules(...args, true))
+      .catch(console.error);
   }, { properties: ['url'] });
   // rules changed: re-evaluate every open tab against them right away
   browser.storage.onChanged.addListener((changes, area) => {

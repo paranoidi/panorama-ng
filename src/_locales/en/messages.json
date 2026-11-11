@@ -169,5 +169,14 @@
     },
     "domainRulesDelete": {
         "message": "Delete"
+    },
+    "tabMovedTitle": {
+        "message": "Tab moved to \"$GROUP$\"",
+        "placeholders": {
+            "group": { "content": "$1" }
+        }
+    },
+    "tabMovedMessage": {
+        "message": "Click to switch to this group"
     }
 }
