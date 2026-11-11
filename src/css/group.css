@@ -20,6 +20,11 @@
 	box-shadow: 0 0 1px #fff;
 }
 
+/* ponytail: the group holding the selected (last active) tab is the active group; no JS bookkeeping */
+.group:has(.tab.selected) > .inner {
+	border-color: #45a1ff;
+}
+
 .group .header {
 	display: flex;
 	justify-content: stretch;
