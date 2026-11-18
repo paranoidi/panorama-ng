@@ -395,7 +395,11 @@ export function makeGroupNode(group) {
 
   const close = newElement('div', { class: 'close', title: browser.i18n.getMessage('closeGroup') });
 
-  const header = newElement('div', { class: 'header', title: browser.i18n.getMessage('dragGroup') }, [name, input, spacer, groupId, tabCount, close]);
+  const header = newElement('div', { class: 'header' }, [name, input, spacer, groupId, tabCount, close]);
+  // ponytail: set on hover so it follows layout mode toggles; tiling can't drag groups
+  header.addEventListener('mouseenter', () => {
+    header.title = document.body.classList.contains('tiling') ? '' : browser.i18n.getMessage('dragGroup');
+  });
 
   // newtab
   const newtab = newElement('div', { class: 'newtab' }, [newElement('div', { class: 'inner' })]);
