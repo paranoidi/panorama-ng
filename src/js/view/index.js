@@ -116,6 +116,9 @@ function clearSearch() {
 }
 
 function keyInput(e) {
+  // text fields (group rename) own their keys; only the search box drives tab navigation
+  if (e.target.matches('input, textarea') && e.target.id !== 'tab-search') return;
+
   if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
     // group tabs in display order, wrapping across groups; pinned tabs live outside #groups
     const tabIds = [...view.groupsNode.querySelectorAll('.tab')].map((node) => Number(node.getAttribute('tabId')));
