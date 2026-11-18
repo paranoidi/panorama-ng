@@ -398,6 +398,12 @@ function replaceClass(prefix, value) {
 
 function setTheme(theme) {
   replaceClass('theme', theme);
+  // mirrored for theme.js, which applies it before first paint on the next load
+  try {
+    localStorage.setItem('theme', theme);
+  } catch {
+    // no storage: next load just shows the default theme until settings load
+  }
 }
 
 function setToolbarPosition(position) {
