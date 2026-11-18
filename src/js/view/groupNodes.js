@@ -10,42 +10,6 @@ export const groupNodes = {};
 // with groups aren't stepping on each other's toes
 let modifyingGroupContent = false;
 
-function removeGroupNode(groupId) {
-  groupNodes[groupId].group.parentNode.removeChild(groupNodes[groupId].group);
-  delete groupNodes[groupId];
-}
-
-async function removeGroup(group) {
-  await groups.remove(group.id);
-  removeGroupNode(group.id);
-  // new tabs join the active group; don't leave it pointing at a deleted one
-  const [first] = groups.getIds();
-  if (first !== undefined && await groups.getActive() === group.id) {
-    await groups.setActive(first);
-  }
-}
-
-export async function closeGroup(content, group) {
-  const { childNodes } = content;
-  const tabCount = childNodes.length - 1;
-
-  if (tabCount > 0) {
-    const confirmationText = getPluralForm(tabCount, browser.i18n.getMessage('closeGroupWarning', [tabCount]));
-    if (window.confirm(confirmationText)) {
-      await removeGroup(group);
-
-      forEachTab(async (tab) => {
-        const groupId = await getGroupId(tab.id);
-        if (groupId === group.id) {
-          browser.tabs.remove(tab.id);
-        }
-      });
-    }
-  } else {
-    await removeGroup(group);
-  }
-}
-
 function snapValue(a, b, dst) {
   if (a >= b - dst && a <= b + dst) {
     return b;
@@ -264,6 +228,45 @@ export function activateTiling() {
       resizeGroups(groupIds[currentIndex], rect);
       currentIndex += 1;
     }
+  }
+}
+
+function removeGroupNode(groupId) {
+  groupNodes[groupId].group.parentNode.removeChild(groupNodes[groupId].group);
+  delete groupNodes[groupId];
+}
+
+async function removeGroup(group) {
+  await groups.remove(group.id);
+  removeGroupNode(group.id);
+  if (document.body.classList.contains('tiling')) {
+    activateTiling();
+  }
+  // new tabs join the active group; don't leave it pointing at a deleted one
+  const [first] = groups.getIds();
+  if (first !== undefined && await groups.getActive() === group.id) {
+    await groups.setActive(first);
+  }
+}
+
+export async function closeGroup(content, group) {
+  const { childNodes } = content;
+  const tabCount = childNodes.length - 1;
+
+  if (tabCount > 0) {
+    const confirmationText = getPluralForm(tabCount, browser.i18n.getMessage('closeGroupWarning', [tabCount]));
+    if (window.confirm(confirmationText)) {
+      await removeGroup(group);
+
+      forEachTab(async (tab) => {
+        const groupId = await getGroupId(tab.id);
+        if (groupId === group.id) {
+          browser.tabs.remove(tab.id);
+        }
+      });
+    }
+  } else {
+    await removeGroup(group);
   }
 }
 
