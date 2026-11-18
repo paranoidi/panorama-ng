@@ -7,8 +7,8 @@ import {
   fillGroupNodes, insertTab, resizeGroups, raiseGroup, updateGroupFit, relayout,
 } from './groupNodes.js';
 import {
-  initTabNodes, makeTabNode, updateTabNode, setActiveTabNode,
-  setActiveTabNodeById, getActiveTabId, deleteTabNode, updateThumbnail, updateFavicon, tabNodes,
+  initTabNodes, makeTabNode, updateTabNode, setActiveTabNode, setSearchQuery,
+  setActiveTabNodeById, getActiveTabId, deleteTabNode, updateThumbnail, updateFavicon,
 } from './tabNodes.js';
 import * as groups from './groups.js';
 import { loadOptions } from '../_share/options.js';
@@ -107,26 +107,11 @@ async function createGroup(x = 75, y = 75) {
   groupElement.scrollIntoView({ behavior: 'smooth' });
 }
 
-/*
- * Search through tabs based on input field
- */
-async function searchTabs() {
-  const tabs = await browser.tabs.query({ currentWindow: true });
-  const query = document.getElementById('tab-search').value.toLowerCase();
-  tabs.forEach((tab) => {
-    // empty query matches everything, so clearing the search undims all tabs
-    const match = tab.title.toLowerCase().includes(query)
-      || (URL.parse(tab.url)?.hostname ?? '').includes(query);
-    // ponytail: dimming updates only on input; tabs opened/retitled mid-search keep their state
-    tabNodes[tab.id]?.tab.classList.toggle('search-miss', !match);
-  });
-}
-
 function clearSearch() {
   const input = document.getElementById('tab-search');
   if (input.value) {
     input.value = '';
-    searchTabs();
+    setSearchQuery('');
   }
 }
 
@@ -338,7 +323,7 @@ async function initView() {
   rulesDialog.addEventListener('keydown', (e) => e.stopPropagation());
 
   // Listen for search input
-  document.getElementById('tab-search').addEventListener('input', searchTabs);
+  document.getElementById('tab-search').addEventListener('input', (e) => setSearchQuery(e.target.value));
 
   // Listen for middle clicks in background to open new group
   document.getElementById('groups').addEventListener('auxclick', async (event) => {

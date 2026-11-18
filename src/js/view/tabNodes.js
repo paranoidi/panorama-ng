@@ -6,6 +6,19 @@ import { newElement } from '../_share/utils.js';
 
 export const tabNodes = {};
 let activeTabId = -1; // tabid of active tab in view
+let searchQuery = '';
+
+// empty query matches everything, so clearing the search undims all tabs
+function applySearch(node) {
+  const match = node.searchTitle.includes(searchQuery) || node.searchHost.includes(searchQuery);
+  node.tab.classList.toggle('search-miss', !match);
+}
+
+// match against data cached by updateTabNode: no tabs.query per keystroke
+export function setSearchQuery(query) {
+  searchQuery = query.toLowerCase();
+  Object.values(tabNodes).forEach(applySearch);
+}
 
 export function getTabNode(tabId) {
   return tabNodes[tabId].tab;
@@ -82,6 +95,12 @@ export function updateTabNode(tab) {
     node.name.appendChild(document.createTextNode(tab.title));
 
     node.inner.title = tab.title;
+
+    // every create and title/status update lands here, so new and
+    // navigated tabs pick up an active search too
+    node.searchTitle = tab.title.toLowerCase();
+    node.searchHost = URL.parse(tab.url)?.hostname ?? '';
+    applySearch(node);
 
     if (tab.discarded) {
       node.tab.classList.add('inactive');
