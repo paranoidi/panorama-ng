@@ -153,3 +153,8 @@
 .tab.multi .inner {
 	outline: #2ac3a2 3px solid !important;
 }
+
+/* whole tab, not .inner: pinned tabs paint their white background on .tab */
+body.searching .tab.search-miss {
+	opacity: 0.1;
+}

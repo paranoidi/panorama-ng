@@ -217,3 +217,20 @@ body.tiling #tiling {
 	background-color: rgba(69, 161, 255, 0.25);
 	color: #45a1ff;
 }
+
+#tab-search {
+	box-sizing: border-box;
+	height: 28px;
+	margin: 4px;
+	padding: 0 8px;
+
+	border: 1px solid rgba(12, 12, 13, 0.2);
+	border-radius: 4px;
+
+	font-size: 14px;
+}
+
+/* sidebars keep their natural width */
+body:not(.toolbar-left, .toolbar-right) #tab-search {
+	width: 300px;
+}

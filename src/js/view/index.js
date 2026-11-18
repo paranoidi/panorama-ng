@@ -123,16 +123,15 @@ async function createGroup(x = 75, y = 75) {
 async function searchTabs() {
   const tabs = await browser.tabs.query({ currentWindow: true });
   const searchInput = document.getElementById('tab-search').value;
-  // get old active tab in case search doesn't find any valid tabs
-  let futureActiveTabId = getActiveTabId();
-  tabs.forEach((tab, tabIndex) => {
-    const { title } = tabs[tabIndex];
-    // lowercase both inputs and compare to see if match
-    if (title.toLowerCase().includes(searchInput.toLowerCase())) {
-      futureActiveTabId = tabs[tabIndex].id;
-    }
+  document.body.classList.toggle('searching', searchInput !== '');
+  tabs.forEach((tab) => {
+    // lowercase both inputs and compare to see if title or domain match
+    const query = searchInput.toLowerCase();
+    const match = tab.title.toLowerCase().includes(query)
+      || (URL.parse(tab.url)?.hostname ?? '').includes(query);
+    // ponytail: dimming updates only on input; tabs opened/retitled mid-search keep their state
+    document.querySelector(`.tab[tabId="${tab.id}"]`)?.classList.toggle('search-miss', searchInput !== '' && !match);
   });
-  setActiveTabNodeById(futureActiveTabId);
 }
 
 function keyInput(e) {
@@ -145,6 +144,9 @@ function keyInput(e) {
     setActiveTabNodeById(tabIds[i < 0 ? 0 : (i + step + tabIds.length) % tabIds.length]);
   } else if (e.key === 'Enter') {
     browser.tabs.update(getActiveTabId(), { active: true });
+  } else if (e.key === 'Escape') {
+    document.getElementById('tab-search').value = '';
+    searchTabs();
   }
 }
 
