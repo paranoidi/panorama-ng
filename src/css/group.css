@@ -211,10 +211,37 @@
 	cursor: nwse-resize;
 }
 
-/* tiling locks groups in place: no move / resize cursors */
-body.tiling .group .header,
+/* tiling: no resizing; the header still drags to reorder */
 body.tiling .group .content {
 	cursor: default;
+}
+
+/* animate the reflow only while reordering, not on window resize */
+body.reordering .group:not(.ghost) {
+	transition: top .15s, right .15s, bottom .15s, left .15s;
+}
+
+/* the dragged group's slot: an empty dashed outline */
+.group.dragging > .inner {
+	border-style: dashed;
+	background: none;
+	box-shadow: none;
+}
+
+.group.dragging > .inner > * {
+	visibility: hidden;
+}
+
+/* the copy following the cursor */
+.group.ghost {
+	position: fixed;
+	z-index: 2147483647;
+	opacity: .85;
+	pointer-events: none;
+}
+
+.group.ghost > .inner {
+	box-shadow: 0 4px 16px rgba(0, 0, 0, .4);
 }
 
 body.tiling .group :is(.top, .right, .bottom, .left, .topRight, .bottomRight, .bottomLeft, .topLeft) {

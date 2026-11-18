@@ -88,6 +88,17 @@ export async function transform(id, rect) {
   await save();
 }
 
+// array order is the tiling order
+export async function move(id, toIndex) {
+  const index = getIndex(id);
+  if (index === -1) {
+    return;
+  }
+  groups.splice(toIndex, 0, groups.splice(index, 1)[0]);
+
+  await save();
+}
+
 export async function getActive() {
   return browser.sessions.getWindowValue(windowId, 'activeGroup');
 }

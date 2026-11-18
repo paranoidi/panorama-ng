@@ -234,11 +234,100 @@ export function resizeGroups(groupId, groupRect) {
   });
 }
 
+export function activateTiling() {
+  const numGroups = groups.getLength();
+
+  // get number of groups per row
+  const maxGroups = Math.ceil(Math.sqrt(numGroups));
+  const quotient = Math.floor(numGroups / maxGroups);
+  const remainder = numGroups % maxGroups;
+
+  const gridLayout = Array(quotient).fill(maxGroups);
+  if (remainder !== 0) {
+    gridLayout.push(remainder);
+  }
+
+  const groupIds = groups.getIds();
+  let currentIndex = 0;
+  // gridLayout[i] = number of cells per row
+  for (let i = 0; i < gridLayout.length; i += 1) {
+    // j = specific cell in each row
+    for (let j = 0; j < gridLayout[i]; j += 1) {
+      const rect = {};
+      rect.x = j / gridLayout[i];
+      rect.y = i / gridLayout.length;
+      rect.w = 1.0 / gridLayout[i];
+      rect.h = 1.0 / gridLayout.length;
+      rect.i = rect.x + rect.w;
+      rect.j = rect.y + rect.h;
+      groups.transform(groupIds[currentIndex], rect);
+      resizeGroups(groupIds[currentIndex], rect);
+      currentIndex += 1;
+    }
+  }
+}
+
+// Tiling: dragging a group moves it within the tiling order; the others reflow live.
+// Hit-test on stored rects (the cells' target positions), not the animating DOM.
+// Stable: cell k's position depends only on k, so after a move the cursor
+// is over the dragged group.
+function tilingReorder(group, node) {
+  // a copy of the group follows the cursor. Start the drag on the first move:
+  // .dragging hides the group's contents, which on mousedown would swallow
+  // clicks (close button) and double-clicks (rename)
+  let ghost;
+  let dx;
+  let dy;
+
+  const onmousemove = (event) => {
+    event.preventDefault();
+    if (!ghost) {
+      const g = node.getBoundingClientRect();
+      dx = event.clientX - g.left;
+      dy = event.clientY - g.top;
+      ghost = node.cloneNode(true);
+      ghost.className = 'group ghost';
+      ghost.style.cssText = `width: ${g.width}px; height: ${g.height}px;`;
+      document.body.appendChild(ghost);
+      document.body.classList.add('reordering');
+      node.classList.add('dragging');
+    }
+    ghost.style.left = `${event.clientX - dx}px`;
+    ghost.style.top = `${event.clientY - dy}px`;
+
+    const r = node.parentNode.getBoundingClientRect();
+    const x = (event.clientX - r.left) / r.width;
+    const y = (event.clientY - r.top) / r.height;
+
+    const ids = groups.getIds();
+    const target = ids.find((id) => {
+      const { rect } = groups.get(id);
+      return x >= rect.x && x < rect.x + rect.w && y >= rect.y && y < rect.y + rect.h;
+    });
+
+    if (target !== undefined && target !== group.id) {
+      groups.move(group.id, ids.indexOf(target));
+      activateTiling();
+    }
+  };
+
+  document.addEventListener('mousemove', onmousemove, false);
+  document.addEventListener('mouseup', () => {
+    document.removeEventListener('mousemove', onmousemove);
+    ghost?.remove();
+    document.body.classList.remove('reordering');
+    node.classList.remove('dragging');
+  }, { once: true });
+}
+
 function groupTransform(group, node, top, right, bottom, left, elem) {
-  // don't allow resizing if in tiling mode. Read the class, not the stored
+  // tiling: no resizing, a move reorders instead. Read the class, not the stored
   // layoutMode: that is unset until a mode is first chosen, and awaiting it
   // let a quick mouseup slip past before the listeners below were attached
   if (document.body.classList.contains('tiling')) {
+    if (top && right && bottom && left) {
+      tilingReorder(group, node);
+    }
     return;
   }
 
@@ -395,11 +484,7 @@ export function makeGroupNode(group) {
 
   const close = newElement('div', { class: 'close', title: browser.i18n.getMessage('closeGroup') });
 
-  const header = newElement('div', { class: 'header' }, [name, input, spacer, groupId, tabCount, close]);
-  // ponytail: set on hover so it follows layout mode toggles; tiling can't drag groups
-  header.addEventListener('mouseenter', () => {
-    header.title = document.body.classList.contains('tiling') ? '' : browser.i18n.getMessage('dragGroup');
-  });
+  const header = newElement('div', { class: 'header', title: browser.i18n.getMessage('dragGroup') }, [name, input, spacer, groupId, tabCount, close]);
 
   // newtab
   const newtab = newElement('div', { class: 'newtab' }, [newElement('div', { class: 'inner' })]);
@@ -412,6 +497,8 @@ export function makeGroupNode(group) {
   const inner = newElement('div', { class: 'inner' }, [top, right, bottom, left, topRight, bottomRight, bottomLeft, topLeft, header, content]);
   const node = newElement('div', { class: 'group' }, [inner]);
 
+  // a click on close must not start a group drag
+  close.addEventListener('mousedown', (event) => event.stopPropagation(), false);
   close.addEventListener('click', (event) => {
     event.stopPropagation();
     closeGroup(content, group);
@@ -428,6 +515,10 @@ export function makeGroupNode(group) {
     event.preventDefault();
     event.stopPropagation();
 
+    // tiling reorders only from the header; the content area stays inert
+    if (document.body.classList.contains('tiling') && !header.contains(event.target)) {
+      return;
+    }
     groupTransform(group, node, 1, 1, 1, 1, header);
   };
 
@@ -655,37 +746,4 @@ export function raiseGroup(groupId) {
   const lastMoved = (new Date()).getTime();
   groups.get(groupId).lastMoved = lastMoved;
   groupNodes[groupId].group.style.zIndex = lastMoved.toString().substr(-9);
-}
-
-export function activateTiling() {
-  const numGroups = groups.getLength();
-
-  // get number of groups per row
-  const maxGroups = Math.ceil(Math.sqrt(numGroups));
-  const quotient = Math.floor(numGroups / maxGroups);
-  const remainder = numGroups % maxGroups;
-
-  const gridLayout = Array(quotient).fill(maxGroups);
-  if (remainder !== 0) {
-    gridLayout.push(remainder);
-  }
-
-  const groupIds = groups.getIds();
-  let currentIndex = 0;
-  // gridLayout[i] = number of cells per row
-  for (let i = 0; i < gridLayout.length; i += 1) {
-    // j = specific cell in each row
-    for (let j = 0; j < gridLayout[i]; j += 1) {
-      const rect = {};
-      rect.x = j / gridLayout[i];
-      rect.y = i / gridLayout.length;
-      rect.w = 1.0 / gridLayout[i];
-      rect.h = 1.0 / gridLayout.length;
-      rect.i = rect.x + rect.w;
-      rect.j = rect.y + rect.h;
-      groups.transform(groupIds[currentIndex], rect);
-      resizeGroups(groupIds[currentIndex], rect);
-      currentIndex += 1;
-    }
-  }
 }
