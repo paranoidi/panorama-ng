@@ -369,7 +369,7 @@ async function notifyTabMoved(tab, group) {
     message: browser.i18n.getMessage('tabMovedMessage'),
   });
   clearTimeout(movedTimer);
-  movedTimer = setTimeout(() => browser.notifications.clear(MOVED_NOTIFICATION), 3000);
+  movedTimer = setTimeout(() => browser.notifications.clear(MOVED_NOTIFICATION), 4500);
 }
 
 browser.notifications.onClicked.addListener(async (id) => {
