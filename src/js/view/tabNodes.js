@@ -183,6 +183,7 @@ export async function updateThumbnail(tabId, thumbnail) {
     } else {
       node.thumbnail.style.backgroundImage = '';
     }
+    node.thumbnail.classList.toggle('loaded', !!thumbnail);
   }
 }
 
