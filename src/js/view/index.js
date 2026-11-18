@@ -8,7 +8,7 @@ import {
 } from './groupNodes.js';
 import {
   initTabNodes, makeTabNode, updateTabNode, setActiveTabNode,
-  setActiveTabNodeById, getActiveTabId, deleteTabNode, updateThumbnail, updateFavicon,
+  setActiveTabNodeById, getActiveTabId, deleteTabNode, updateThumbnail, updateFavicon, tabNodes,
 } from './tabNodes.js';
 import * as groups from './groups.js';
 import { loadOptions } from '../_share/options.js';
@@ -122,15 +122,13 @@ async function createGroup(x = 75, y = 75) {
  */
 async function searchTabs() {
   const tabs = await browser.tabs.query({ currentWindow: true });
-  const searchInput = document.getElementById('tab-search').value;
-  document.body.classList.toggle('searching', searchInput !== '');
+  const query = document.getElementById('tab-search').value.toLowerCase();
   tabs.forEach((tab) => {
-    // lowercase both inputs and compare to see if title or domain match
-    const query = searchInput.toLowerCase();
+    // empty query matches everything, so clearing the search undims all tabs
     const match = tab.title.toLowerCase().includes(query)
       || (URL.parse(tab.url)?.hostname ?? '').includes(query);
     // ponytail: dimming updates only on input; tabs opened/retitled mid-search keep their state
-    document.querySelector(`.tab[tabId="${tab.id}"]`)?.classList.toggle('search-miss', searchInput !== '' && !match);
+    tabNodes[tab.id]?.tab.classList.toggle('search-miss', !match);
   });
 }
 
@@ -361,7 +359,11 @@ async function initView() {
   }, false);
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
+    // leaving the view (clicked tab, Enter, tab switch) ends the search
+    if (document.hidden) {
+      document.getElementById('tab-search').value = '';
+      searchTabs();
+    } else {
       if (pendingReload) {
         window.location.reload();
       }

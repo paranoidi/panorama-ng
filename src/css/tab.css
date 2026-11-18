@@ -155,6 +155,6 @@
 }
 
 /* whole tab, not .inner: pinned tabs paint their white background on .tab */
-body.searching .tab.search-miss {
+.tab.search-miss {
 	opacity: 0.1;
 }
