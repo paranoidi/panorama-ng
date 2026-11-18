@@ -79,6 +79,10 @@ body.theme-dark {
 	background-color: #38383d;
 }
 
+.theme-dark .tab .thumbnail {
+	background-color: #38383d;
+}
+
 .theme-dark .tab.inactive .inner {
 	opacity: 0.6;
 }
