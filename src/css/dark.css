@@ -52,17 +52,12 @@ body.theme-dark {
 	border: none;
 }
 
-.theme-dark .group .header input,
 .theme-dark .group .header .name {
 	color: #b1b1b3;
 }
 
 .theme-dark .group:has(.tab.selected) .header .name {
 	color: #fff;
-}
-
-.theme-dark .group .header.edit input {
-	color: #000;
 }
 
 .theme-dark .group .header .tab_count, .theme-dark .group .header .group_id {
