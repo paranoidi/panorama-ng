@@ -324,6 +324,9 @@ async function tabActivated(activeInfo) {
   const tab = await browser.tabs.get(activeInfo.tabId);
 
   if (tab.pinned) {
+    // pinned tabs belong to no group: re-show the window's active group, since
+    // leaving the Panorama View tab (group -1) for a pinned one left it hidden
+    await toggleVisibleTabs(await browser.sessions.getWindowValue(tab.windowId, 'activeGroup'));
     return;
   }
 

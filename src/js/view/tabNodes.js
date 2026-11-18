@@ -134,7 +134,8 @@ export async function setActiveTabNode(tabId) {
       tabNodes[tab.id].tab.classList.remove('selected');
     }
 
-    if (tab.lastAccessed > lastAccessed && tab.id !== tabId) {
+    // pinned tabs belong to no group; skip them so the active group stays highlighted
+    if (tab.lastAccessed > lastAccessed && tab.id !== tabId && !tab.pinned) {
       lastAccessed = tab.lastAccessed;
       lastActive = tab.id;
     }

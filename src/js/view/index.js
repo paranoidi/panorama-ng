@@ -123,7 +123,7 @@ function keyInput(e) {
     // group tabs in display order, wrapping across groups; pinned tabs live outside #groups
     const tabIds = [...view.groupsNode.querySelectorAll('.tab')].map((node) => Number(node.getAttribute('tabId')));
     if (tabIds.length === 0) return;
-    const i = tabIds.indexOf(getActiveTabId()); // -1 (e.g. pinned) starts from the first tab
+    const i = tabIds.indexOf(getActiveTabId()); // -1 (no grouped tab) starts from the first tab
     const step = e.key === 'ArrowRight' ? 1 : -1;
     setActiveTabNodeById(tabIds[i < 0 ? 0 : (i + step + tabIds.length) % tabIds.length]);
   } else if (e.key === 'Enter') {
