@@ -1,7 +1,7 @@
 let windowId;
 let groups;
 
-async function save() {
+export async function save() {
   await browser.sessions.setWindowValue(windowId, 'groups', groups);
 }
 
@@ -88,15 +88,13 @@ export async function transform(id, rect) {
   await save();
 }
 
-// array order is the tiling order
-export async function move(id, toIndex) {
+// array order is the tiling order; in-memory only, the caller re-tiles and saves
+export function move(id, toIndex) {
   const index = getIndex(id);
   if (index === -1) {
     return;
   }
   groups.splice(toIndex, 0, groups.splice(index, 1)[0]);
-
-  await save();
 }
 
 export async function getActive() {

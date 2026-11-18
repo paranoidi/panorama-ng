@@ -1,6 +1,6 @@
 import { setGroupId, getGroupId } from './tabs.js';
 import {
-  groupNodes, makeGroupNode, resizeGroups, updateGroupFit, insertTab, activateTiling,
+  groupNodes, makeGroupNode, updateGroupFit, insertTab, relayout,
 } from './groupNodes.js';
 import * as groups from './groups.js';
 import { newElement } from '../_share/utils.js';
@@ -190,11 +190,7 @@ export async function outsideDrop(e) {
 
   document.getElementById('groups').appendChild(groupElement);
 
-  if (document.body.classList.contains('tiling')) {
-    activateTiling();
-  } else {
-    resizeGroups();
-  }
+  relayout();
 
   putTabInGroup(group.id);
 

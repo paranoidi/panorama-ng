@@ -224,10 +224,21 @@ export function activateTiling() {
       rect.h = 1.0 / gridLayout.length;
       rect.i = rect.x + rect.w;
       rect.j = rect.y + rect.h;
-      groups.transform(groupIds[currentIndex], rect);
-      resizeGroups(groupIds[currentIndex], rect);
+      groups.get(groupIds[currentIndex]).rect = rect;
       currentIndex += 1;
     }
+  }
+  // one save and one layout pass for the whole grid, not one per group
+  groups.save();
+  resizeGroups();
+}
+
+// lay groups out for the current mode; call after adding or removing a group
+export function relayout() {
+  if (document.body.classList.contains('tiling')) {
+    activateTiling();
+  } else {
+    resizeGroups();
   }
 }
 
@@ -239,9 +250,7 @@ function removeGroupNode(groupId) {
 async function removeGroup(group) {
   await groups.remove(group.id);
   removeGroupNode(group.id);
-  if (document.body.classList.contains('tiling')) {
-    activateTiling();
-  }
+  relayout();
   // new tabs join the active group; don't leave it pointing at a deleted one
   const [first] = groups.getIds();
   if (first !== undefined && await groups.getActive() === group.id) {
@@ -281,6 +290,7 @@ function tilingReorder(group, node) {
   let ghost;
   let dx;
   let dy;
+  let r; // #groups doesn't move or resize mid-drag; read it once
 
   const onmousemove = (event) => {
     event.preventDefault();
@@ -294,23 +304,23 @@ function tilingReorder(group, node) {
       document.body.appendChild(ghost);
       document.body.classList.add('reordering');
       node.classList.add('dragging');
+      r = node.parentNode.getBoundingClientRect();
     }
     ghost.style.left = `${event.clientX - dx}px`;
     ghost.style.top = `${event.clientY - dy}px`;
 
-    const r = node.parentNode.getBoundingClientRect();
     const x = (event.clientX - r.left) / r.width;
     const y = (event.clientY - r.top) / r.height;
 
     const ids = groups.getIds();
-    const target = ids.find((id) => {
+    const to = ids.findIndex((id) => {
       const { rect } = groups.get(id);
       return x >= rect.x && x < rect.x + rect.w && y >= rect.y && y < rect.y + rect.h;
     });
 
-    if (target !== undefined && target !== group.id) {
-      groups.move(group.id, ids.indexOf(target));
-      activateTiling();
+    if (to !== -1 && ids[to] !== group.id) {
+      groups.move(group.id, to);
+      activateTiling(); // saves the new order
     }
   };
 
@@ -324,13 +334,10 @@ function tilingReorder(group, node) {
 }
 
 function groupTransform(group, node, top, right, bottom, left, elem) {
-  // tiling: no resizing, a move reorders instead. Read the class, not the stored
+  // don't allow resizing if in tiling mode. Read the class, not the stored
   // layoutMode: that is unset until a mode is first chosen, and awaiting it
   // let a quick mouseup slip past before the listeners below were attached
   if (document.body.classList.contains('tiling')) {
-    if (top && right && bottom && left) {
-      tilingReorder(group, node);
-    }
     return;
   }
 
@@ -500,8 +507,6 @@ export function makeGroupNode(group) {
   const inner = newElement('div', { class: 'inner' }, [top, right, bottom, left, topRight, bottomRight, bottomLeft, topLeft, header, content]);
   const node = newElement('div', { class: 'group' }, [inner]);
 
-  // a click on close must not start a group drag
-  close.addEventListener('mousedown', (event) => event.stopPropagation(), false);
   close.addEventListener('click', (event) => {
     event.stopPropagation();
     closeGroup(content, group);
@@ -515,18 +520,23 @@ export function makeGroupNode(group) {
 
   // move content pane as a whole around
   const moveFunc = function f(event) {
-    event.preventDefault();
     event.stopPropagation();
+    // controls never start a drag; no preventDefault so the input can place its cursor
+    if (event.target.closest('.close, input, .newtab')) {
+      return;
+    }
+    event.preventDefault();
 
-    // tiling reorders only from the header; the content area stays inert
-    if (document.body.classList.contains('tiling') && !header.contains(event.target)) {
+    if (document.body.classList.contains('tiling')) {
+      // tiling reorders only from the header; the content area stays inert
+      if (header.contains(event.target)) {
+        tilingReorder(group, node);
+      }
       return;
     }
     groupTransform(group, node, 1, 1, 1, 1, header);
   };
 
-  // allow whole content to be moved except for new tab (existing tabs are done in newtab)
-  newtab.addEventListener('mousedown', (e) => { e.stopPropagation(); });
   inner.addEventListener('mousedown', moveFunc, false);
 
   // renaming groups
@@ -541,9 +551,6 @@ export function makeGroupNode(group) {
       input.focus();
     }
   }, false);
-
-  // keep clicks in the input from starting a group drag, so the cursor can be placed
-  input.addEventListener('mousedown', (event) => event.stopPropagation(), false);
 
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {

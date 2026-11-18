@@ -4,7 +4,7 @@ import {
 } from './drag.js';
 import {
   initGroupNodes, makeGroupNode,
-  fillGroupNodes, insertTab, resizeGroups, raiseGroup, updateGroupFit, activateTiling,
+  fillGroupNodes, insertTab, resizeGroups, raiseGroup, updateGroupFit, relayout,
 } from './groupNodes.js';
 import {
   initTabNodes, makeTabNode, updateTabNode, setActiveTabNode,
@@ -39,14 +39,8 @@ async function setLayoutMode(mode) {
   const windowId = (await browser.windows.getCurrent()).id;
   // body.tiling colours the tiling button and drops move/resize cursors
   document.body.classList.toggle('tiling', mode === 'tiling');
-
-  if (mode === 'tiling') {
-    await browser.sessions.setWindowValue(windowId, 'layoutMode', 'tiling');
-    activateTiling();
-  } else {
-    await browser.sessions.setWindowValue(windowId, 'layoutMode', 'freeform');
-    resizeGroups();
-  }
+  await browser.sessions.setWindowValue(windowId, 'layoutMode', mode);
+  relayout();
 }
 
 async function captureThumbnail(tab) {
@@ -108,11 +102,7 @@ async function createGroup(x = 75, y = 75) {
 
   view.groupsNode.appendChild(groupElement);
 
-  if (document.body.classList.contains('tiling')) {
-    activateTiling();
-  } else {
-    resizeGroups();
-  }
+  relayout();
 
   groupElement.scrollIntoView({ behavior: 'smooth' });
 }
@@ -132,6 +122,14 @@ async function searchTabs() {
   });
 }
 
+function clearSearch() {
+  const input = document.getElementById('tab-search');
+  if (input.value) {
+    input.value = '';
+    searchTabs();
+  }
+}
+
 function keyInput(e) {
   if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
     // group tabs in display order, wrapping across groups; pinned tabs live outside #groups
@@ -143,8 +141,7 @@ function keyInput(e) {
   } else if (e.key === 'Enter') {
     browser.tabs.update(getActiveTabId(), { active: true });
   } else if (e.key === 'Escape') {
-    document.getElementById('tab-search').value = '';
-    searchTabs();
+    clearSearch();
   }
 }
 
@@ -247,12 +244,8 @@ async function initView() {
 
   // restore the window's saved layout (free-form if never chosen)
   const layoutMode = await browser.sessions.getWindowValue(view.windowId, 'layoutMode');
-  if (layoutMode === 'tiling') {
-    document.body.classList.add('tiling');
-    activateTiling();
-  } else {
-    resizeGroups();
-  }
+  document.body.classList.toggle('tiling', layoutMode === 'tiling');
+  relayout();
 
   captureThumbnails();
   // view.intervalId = setInterval(captureThumbnails, 2000);
@@ -361,8 +354,7 @@ async function initView() {
   document.addEventListener('visibilitychange', () => {
     // leaving the view (clicked tab, Enter, tab switch) ends the search
     if (document.hidden) {
-      document.getElementById('tab-search').value = '';
-      searchTabs();
+      clearSearch();
     } else {
       if (pendingReload) {
         window.location.reload();
